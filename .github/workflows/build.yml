@@ -2,7 +2,7 @@ name: Build and Publish Android
 
 on:
   push:
-    branches: ["**"]
+    branches-ignore: [coui-preview]
     tags: ["*.*.*"]
     paths-ignore:
       - ".trellis/**"
