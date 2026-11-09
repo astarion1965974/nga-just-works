@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -42,8 +41,6 @@ import gov.anzong.androidnga.R
 import androidx.compose.ui.viewinterop.AndroidView
 import com.itos.coui.backdrop.CouiBackdrop
 import com.itos.coui.chip.ChipTab
-import com.itos.coui.effect.CouiFloatingRenderer
-import com.itos.coui.floatingactionbutton.Fab
 import gov.anzong.androidnga.ui.miuix.MiuixReaderCallbacks
 import gov.anzong.androidnga.ui.miuix.MiuixReaderTabsState
 import kotlinx.coroutines.delay
@@ -62,14 +59,11 @@ internal fun CouiReaderPage(activity: Activity, content: View, tabs: MiuixReader
         floatingAction = if (reply == null) null else {
             {
                 val refresh = callbacks.onReplyLongPressRepeat
-                val modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp)
-                Fab(
-                    modifier = if (refresh == null) modifier else modifier.holdToRefresh(refresh, callbacks.longPressRepeatMillis),
-                    renderer = remember { CouiFloatingRenderer.standalone() },
+                CouiPageFab(
+                    description = "回复",
                     onClick = reply,
-                ) {
-                    Icon(Icons.Default.Edit, "回复", tint = Color.White)
-                }
+                    modifier = if (refresh == null) Modifier else Modifier.holdToRefresh(refresh, callbacks.longPressRepeatMillis),
+                )
             }
         },
     ) { padding ->

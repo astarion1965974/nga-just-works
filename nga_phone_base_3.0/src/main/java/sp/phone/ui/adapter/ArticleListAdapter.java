@@ -462,7 +462,10 @@ public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.
         }
         ArticleViewHolder viewHolder = new ArticleViewHolder(view);
         ViewGroup.LayoutParams lp = viewHolder.avatarIv.getLayoutParams();
-        lp.width = lp.height = PhoneConfiguration.getInstance().getAvatarSize();
+        // COUI rows use the fixed 40dp list avatar so names and summaries line up on every floor.
+        lp.width = lp.height = mCouiStyle
+                ? Math.round(40 * view.getResources().getDisplayMetrics().density)
+                : PhoneConfiguration.getInstance().getAvatarSize();
         if (viewType == VIEW_TYPE_WEB_VIEW) {
             viewHolder.contentTextView.setVisibility(View.GONE);
             // viewHolder.contentTV.setVisibility(View.VISIBLE);
@@ -582,8 +585,10 @@ public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.
     private LocalWebView createLocalWebView() {
         LocalWebView localWebView = new LocalWebView(mContext);
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        lp.setMarginStart(mContext.getResources().getDimensionPixelSize(R.dimen.material_standard_half));
-        lp.setMarginEnd(mContext.getResources().getDimensionPixelSize(R.dimen.material_standard_half));
+        // The COUI page style pads the body by 16px itself, matching the 16dp header inset.
+        int margin = mCouiStyle ? 0 : mContext.getResources().getDimensionPixelSize(R.dimen.material_standard_half);
+        lp.setMarginStart(margin);
+        lp.setMarginEnd(margin);
         localWebView.setLayoutParams(lp);
         return localWebView;
     }

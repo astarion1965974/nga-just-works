@@ -21,7 +21,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -46,8 +45,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.itos.coui.dialog.CouiDialogAction
 import com.itos.coui.dialog.Dialog
-import com.itos.coui.effect.CouiFloatingRenderer
-import com.itos.coui.floatingactionbutton.Fab
 import com.itos.coui.layout.CouiPageDefaults
 import com.itos.coui.layout.Divider
 import com.itos.coui.layout.Item
@@ -90,13 +87,7 @@ internal fun CouiTopicListPage(activity: Activity, state: MiuixTopicListState, c
         },
         floatingAction = if (post == null) null else {
             {
-                Fab(
-                    modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp),
-                    renderer = remember { CouiFloatingRenderer.standalone() },
-                    onClick = post,
-                ) {
-                    Icon(Icons.Default.Edit, "发帖", tint = Color.White)
-                }
+                CouiPageFab(description = "发帖", onClick = post)
             }
         },
     ) { padding ->

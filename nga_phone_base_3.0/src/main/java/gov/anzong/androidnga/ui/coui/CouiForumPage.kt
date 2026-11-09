@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
@@ -32,11 +34,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import com.itos.coui.backdrop.CouiBackdrop
 import com.itos.coui.backdrop.couiBackdrop
 import com.itos.coui.backdrop.rememberCouiBackdrop
 import com.itos.coui.layout.Scaffold
+import com.itos.coui.effect.CouiFloatingRenderer
+import com.itos.coui.effect.LocalCouiContourGlowEnabled
+import com.itos.coui.floatingactionbutton.CouiFabDefaults
+import com.itos.coui.floatingactionbutton.Fab
 import com.itos.coui.menu.CouiMenuItem
 import com.itos.coui.menu.Menu
 import com.itos.coui.menu.couiMenuAnchor
@@ -187,6 +194,33 @@ internal fun CouiForumPage(
             floatingActionButton = floatingAction,
             content = content,
         )
+    }
+}
+
+/**
+ * The page FAB wired like the coui-kit demo (FabSampleButton / docs/components/fab.md): 24dp from the
+ * Scaffold slot's bottom-end corner, material and shadow built from the same colour, and its glow
+ * composited as a transparent foreground over what is actually drawn beneath it instead of a
+ * rectangle back-filled from the page backdrop, which left the halo looking offset from the button.
+ */
+@Composable
+internal fun BoxScope.CouiPageFab(
+    description: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val dark = CouiTheme.isDark
+    val color = CouiTheme.colorScheme.accent
+    Fab(
+        modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp).then(modifier),
+        renderer = remember { CouiFloatingRenderer.standalone() },
+        onClick = onClick,
+        dark = dark,
+        material = CouiFabDefaults.material(color, dark),
+        shadow = CouiFabDefaults.shadow(color, LocalDensity.current.density, LocalCouiContourGlowEnabled.current),
+        foregroundComposition = true,
+    ) {
+        Icon(Icons.Default.Edit, description, Modifier.size(24.dp), tint = Color.White)
     }
 }
 

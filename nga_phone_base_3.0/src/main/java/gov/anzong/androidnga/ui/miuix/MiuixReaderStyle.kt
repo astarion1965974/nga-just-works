@@ -366,40 +366,71 @@ object MiuixReaderStyle {
         (item.layoutParams as? ViewGroup.MarginLayoutParams)?.setMargins(
             (16 * density).toInt(), (5 * density).toInt(), (16 * density).toInt(), (5 * density).toInt(),
         )
+        // COUI list-row metrics: 16dp card margins, a 40dp avatar 12dp from the text, the name and the
+        // floor sharing one baseline, and the summary lines 2dp apart starting at the same x as the name.
+        fun dp(value: Float) = (value * density).roundToInt()
         val header = (item as? ViewGroup)?.getChildAt(0) as? ViewGroup
-        header?.setPadding((16 * density).toInt(), (14 * density).toInt(), (16 * density).toInt(), (8 * density).toInt())
+        header?.setPadding(dp(16f), dp(14f), dp(16f), dp(10f))
+        item.findViewById<View>(R.id.fl_avatar)?.apply {
+            (layoutParams as? ViewGroup.MarginLayoutParams)?.marginEnd = dp(12f)
+        }
         item.findViewById<TextView>(R.id.tv_nickName)?.apply {
             setTextColor(title)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
             (layoutParams as? RelativeLayout.LayoutParams)?.apply {
                 width = ViewGroup.LayoutParams.WRAP_CONTENT
-                addRule(RelativeLayout.START_OF, R.id.tv_floor)
+                topMargin = 0
+                marginStart = 0
+                marginEnd = dp(8f)
+                // Resolves to the floor label while the client badge is hidden.
+                addRule(RelativeLayout.START_OF, R.id.iv_client)
             }
         }
         item.findViewById<TextView>(R.id.tv_post_time)?.apply {
             setTextColor(summary)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+            maxLines = 1
             (layoutParams as? RelativeLayout.LayoutParams)?.apply {
                 removeRule(RelativeLayout.ALIGN_PARENT_END)
                 removeRule(RelativeLayout.ALIGN_BOTTOM)
                 addRule(RelativeLayout.BELOW, R.id.tv_nickName)
                 addRule(RelativeLayout.END_OF, R.id.fl_avatar)
+                setMargins(0, dp(2f), 0, 0)
+                marginStart = 0
             }
         }
         item.findViewById<TextView>(R.id.tv_floor)?.apply {
             setTextColor(summary)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+            maxLines = 1
             (layoutParams as? RelativeLayout.LayoutParams)?.apply {
                 removeRule(RelativeLayout.BELOW)
                 removeRule(RelativeLayout.ALIGN_TOP)
                 removeRule(RelativeLayout.ALIGN_BOTTOM)
-                addRule(RelativeLayout.ALIGN_TOP, R.id.tv_nickName)
+                addRule(RelativeLayout.ALIGN_BASELINE, R.id.tv_nickName)
+            }
+        }
+        item.findViewById<View>(R.id.iv_client)?.apply {
+            (layoutParams as? RelativeLayout.LayoutParams)?.apply {
+                removeRule(RelativeLayout.BELOW)
+                marginEnd = dp(4f)
             }
         }
         item.findViewById<TextView>(R.id.tv_detail)?.apply {
             setTextColor(summary)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
-            (layoutParams as? RelativeLayout.LayoutParams)?.addRule(RelativeLayout.BELOW, R.id.tv_post_time)
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
+            (layoutParams as? RelativeLayout.LayoutParams)?.apply {
+                removeRule(RelativeLayout.BELOW)
+                removeRule(RelativeLayout.START_OF)
+                addRule(RelativeLayout.BELOW, R.id.tv_post_time)
+                addRule(RelativeLayout.ALIGN_PARENT_END)
+                setMargins(0, dp(2f), 0, 0)
+                marginStart = 0
+            }
         }
         item.findViewById<TextView>(R.id.tv_content)?.apply {
             setPadding((16 * density).toInt(), paddingTop, (16 * density).toInt(), paddingBottom)
