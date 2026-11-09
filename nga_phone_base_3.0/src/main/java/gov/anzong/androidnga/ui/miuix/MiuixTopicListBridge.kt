@@ -3,6 +3,8 @@ package gov.anzong.androidnga.ui.miuix
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
+import gov.anzong.androidnga.base.util.PreferenceUtils
+import gov.anzong.androidnga.common.PreferenceKey
 import sp.phone.mvp.model.entity.ThreadPageInfo
 import sp.phone.ui.adapter.BaseAppendableAdapter
 
@@ -20,6 +22,7 @@ class MiuixTopicListBridge(
 ) {
     private val state = MiuixTopicListState().apply {
         titleSizeSp = MiuixTopicRows.titleSize()
+        couiTitleSizeSp = PreferenceUtils.getData(PreferenceKey.KEY_TOPIC_TITLE_SIZE, 16).toFloat()
         emptyText = "暂无内容"
     }
 

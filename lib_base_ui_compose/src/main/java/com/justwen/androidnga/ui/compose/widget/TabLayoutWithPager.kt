@@ -1,8 +1,18 @@
 package com.justwen.androidnga.ui.compose.widget
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.ContentAlpha
@@ -29,6 +39,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.graphicsLayer
@@ -97,6 +109,7 @@ internal fun resolveRenderedTabTargetIndex(
 }
 
 @Suppress("ModifierParameter")
+@OptIn(ExperimentalFoundationApi::class)
 @Preview
 @Composable
 fun TabLayoutWithPager(
@@ -113,6 +126,7 @@ fun TabLayoutWithPager(
     onTabReorderCommit: (() -> Unit)? = null,
     onTabReorderCancel: (() -> Unit)? = null,
     onTabReorderActiveChanged: (Boolean) -> Unit = {},
+    tabContent: @Composable ((Modifier, String, Boolean, () -> Unit) -> Unit)? = null,
     content: @Composable ((index: Int) -> Unit)? = null,
 ) {
     val pagerState = rememberPagerState(pageCount = { tabs.size }, initialPage = initialPage)
@@ -383,7 +397,21 @@ fun TabLayoutWithPager(
                         pagerState.animateScrollToPage(index)
                     }
                 }
-                if (miuixTabs != null) {
+                if (tabContent != null) {
+                    val reveal = remember { BringIntoViewRequester() }
+                    if (rowSelectedIndex == index) {
+                        LaunchedEffect(index) {
+                            withFrameNanos { }
+                            reveal.bringIntoView()
+                        }
+                    }
+                    tabContent(
+                        tabModifier.bringIntoViewRequester(reveal),
+                        title,
+                        logicalSelectedIndex == index,
+                        onTabClick,
+                    )
+                } else if (miuixTabs != null) {
                     MiuixTab(
                         title = title,
                         selected = logicalSelectedIndex == index,
@@ -408,7 +436,19 @@ fun TabLayoutWithPager(
     }
 
     Column {
-        if (miuixTabs != null) {
+        if (tabContent != null) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .onGloballyPositioned { tabRowBounds = it.boundsInRoot() }
+                    .horizontalScroll(rememberScrollState(), enabled = draggedTabKey == null)
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                content = { tabRowItems() },
+            )
+        } else if (miuixTabs != null) {
             // Miuix TabRow takes only strings, so it cannot carry the per-tab reorder gestures,
             // bounds tracking and accessibility actions above. This row reproduces its look (rounded
             // track, sliding selected block, bold selected text) around the same tab items.

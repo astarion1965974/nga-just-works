@@ -8,9 +8,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import coil.compose.rememberAsyncImagePainter
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -32,6 +35,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.itos.coui.backdrop.couiBackdrop
+import com.itos.coui.backdrop.rememberCouiBackdrop
 import com.itos.coui.layout.CouiPageDefaults
 import com.itos.coui.layout.Divider
 import com.itos.coui.layout.Group
@@ -123,16 +128,23 @@ internal fun CouiHomeScreen(
                     )
                 },
             ) { padding ->
-                Column(Modifier.fillMaxSize().padding(top = padding.calculateTopPadding())) {
+                val tabBackdrop = rememberCouiBackdrop()
+                Box(Modifier.fillMaxSize().padding(top = padding.calculateTopPadding())) {
+                    Box(
+                        Modifier.fillMaxWidth().height(52.dp)
+                            .couiBackdrop(tabBackdrop)
+                            .background(CouiTheme.colorScheme.background),
+                    )
                     CompositionLocalProvider(LocalCouiBoardStyle provides true) {
                         ForumBoardView(
-                        forumBoardViewModel = forumBoardViewModel,
-                        pagerModifier = Modifier.onGloballyPositioned { gestures.pagerBounds = it.boundsInRoot() },
-                        onPagerInteractionChanged = {
-                            gestures.settledPage = it?.settledPage ?: -1
-                            gestures.pagerSettled = it?.isScrollInProgress == false
-                        },
-                        onFavoriteReorderActiveChanged = { gestures.favoriteReorderActive = it },
+                            forumBoardViewModel = forumBoardViewModel,
+                            pagerModifier = Modifier.onGloballyPositioned { gestures.pagerBounds = it.boundsInRoot() },
+                            onPagerInteractionChanged = {
+                                gestures.settledPage = it?.settledPage ?: -1
+                                gestures.pagerSettled = it?.isScrollInProgress == false
+                            },
+                            onFavoriteReorderActiveChanged = { gestures.favoriteReorderActive = it },
+                            tabBackdrop = tabBackdrop,
                         )
                     }
                 }

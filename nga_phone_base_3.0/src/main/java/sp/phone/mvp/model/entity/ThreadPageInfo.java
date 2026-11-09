@@ -37,6 +37,8 @@ public class ThreadPageInfo implements JavaBean {
 
     private boolean mIsAnonymity;
 
+    private transient boolean mPinned;
+
     private int mPostDate;
 
     private ReplyInfo mReplyInfo;
@@ -178,6 +180,16 @@ public class ThreadPageInfo implements JavaBean {
 
     public void setPosition(int position) {
         mPosition = position;
+    }
+
+    @JSONField(serialize = false, deserialize = false)
+    public boolean isPinned() {
+        return mPinned;
+    }
+
+    @JSONField(serialize = false, deserialize = false)
+    public void setPinned(boolean pinned) {
+        mPinned = pinned;
     }
 
     public boolean isAnonymity() {

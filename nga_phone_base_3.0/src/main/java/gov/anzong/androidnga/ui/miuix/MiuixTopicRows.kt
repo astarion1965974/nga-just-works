@@ -26,6 +26,8 @@ object MiuixTopicRows {
         author = info.author,
         lastReply = info.lastPoster,
         replies = info.replies.toString(),
+        postDateSeconds = info.postDate,
+        pinned = info.isPinned,
     )
 
     private fun reply(info: ThreadPageInfo, key: String): MiuixTopicRow? {

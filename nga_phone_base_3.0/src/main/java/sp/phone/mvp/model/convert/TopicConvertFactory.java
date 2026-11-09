@@ -155,7 +155,9 @@ public class TopicConvertFactory {
     }
 
     private void convertTopic(TopicListInfo listInfo, TopicListBean topicListBean, int page) {
-        Map<String, TopicListBean.DataBean.TBean> map = topicListBean.getData().get__T();
+        TopicListBean.DataBean data = topicListBean.getData();
+        Map<String, TopicListBean.DataBean.TBean> map = data.get__T();
+        String toppedTopicId = data.get__F() == null ? null : data.get__F().getTopped_topic();
         int count = 0;
         while (count < map.size()) {
             String key = String.valueOf(count);
@@ -189,6 +191,7 @@ public class TopicConvertFactory {
                 tid = StringUtils.getUrlParameter(tpcUrl, "tid");
             }
             pageInfo.setTid(tid);
+            pageInfo.setPinned(tBean.getRecommend() >= 10 || (tid > 0 && Integer.toString(tid).equals(toppedTopicId)));
             pageInfo.setPage(page);
             TopicListBean.DataBean.TBean.PBean pBean = tBean.get__P();
             if (pBean != null) {

@@ -96,6 +96,8 @@ class MiuixTopicRow(
     val replies: String?,
     /** Shown instead of author/last reply for reply search results. */
     val summary: String? = null,
+    val postDateSeconds: Int = 0,
+    val pinned: Boolean = false,
 ) {
     /** Author and last replier as shown in the meta row, built once per row. */
     val people: String = listOfNotNull(author, lastReply?.let { "· $it" }).joinToString(" ")
@@ -124,6 +126,7 @@ class MiuixTopicListState {
 
     /** Title size in sp from the existing topic-title-size preference. */
     var titleSizeSp by mutableFloatStateOf(17f)
+    var couiTitleSizeSp: Float? = null
     var refreshing by mutableStateOf(false)
 
     /** True until the first page arrived (or failed). */

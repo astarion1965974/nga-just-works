@@ -8,9 +8,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.staticCompositionLocalOf
+import com.itos.coui.backdrop.CouiBackdrop
+import com.itos.coui.chip.ChipTab
 import com.itos.coui.layout.CouiPageDefaults
-import com.itos.coui.text.CouiTextKind
-import com.itos.coui.text.Text as CouiText
+import com.itos.coui.shape.CouiShape
 import com.itos.coui.theme.CouiTheme
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -23,6 +24,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -55,9 +57,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.window.layout.WindowMetricsCalculator
 import coil.compose.rememberAsyncImagePainter
@@ -86,6 +90,7 @@ fun ForumBoardView(
     pagerModifier: Modifier = Modifier,
     onPagerInteractionChanged: ((PagerInteractionState?) -> Unit)? = null,
     onFavoriteReorderActiveChanged: (Boolean) -> Unit = {},
+    tabBackdrop: CouiBackdrop? = null,
 ) {
     val boardData by forumBoardViewModel.boardLiveData.observeAsState()
     val compactSetting = rememberHomeLayoutCompact()
@@ -143,6 +148,9 @@ fun ForumBoardView(
                 homeOrderSnapshot = null
             },
             onTabReorderActiveChanged = { tabReorderActive = it },
+            tabContent = if (tabBackdrop == null) null else { modifier, label, selected, onClick ->
+                ChipTab(modifier = modifier, selected = selected, onClick = onClick, label = label, backdrop = tabBackdrop)
+            },
         ) { pageIndex ->
             HomePage(compact) {
                 ForumBoardContent(pageIndex, forumBoardViewModel) { active ->
@@ -217,7 +225,14 @@ private fun homeFillsScreen(): Boolean {
 @Composable
 fun ForumBoardGroupView(board: BoardEntity, context: Context = ContextUtils.getContext()) {
     if (LocalCouiBoardStyle.current) {
-        CouiText(text = board.name, kind = CouiTextKind.GroupTitle, modifier = Modifier.padding(16.dp))
+        Text(
+            text = board.name,
+            modifier = Modifier.padding(top = 12.dp, bottom = 2.dp),
+            style = CouiTheme.typography.body,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = CouiTheme.colorScheme.onSurfaceVariant,
+        )
         return
     }
     if (isMiuixComposition) {
@@ -246,15 +261,38 @@ private fun ForumBoardGridItemView(
     clickEnabled: Boolean = true,
     context: Context = ContextUtils.getContext()
 ) {
-    val paddingValue = 4.dp
-    val imageSize = 48.dp
-    val miuix = isMiuixComposition
-    val coui = LocalCouiBoardStyle.current
-    val tileStyle = when {
-        coui -> Modifier.clip(CouiPageDefaults.shape).background(CouiTheme.colorScheme.card)
-        miuix -> Modifier.miuixBoardTile()
-        else -> Modifier
+    val openBoard = { if (clickEnabled) forumBoardViewModel.showTopicList(child) }
+    if (LocalCouiBoardStyle.current) {
+        val colors = CouiTheme.colorScheme
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .heightIn(min = 64.dp)
+                .clip(CouiShape(16.dp))
+                .background(colors.card)
+                .clickable(onClick = openBoard)
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            ForumBoardIcon(child, Modifier.size(28.dp).clip(CouiShape(7.dp)))
+            Text(
+                text = child.name,
+                modifier = Modifier.weight(1f),
+                style = CouiTheme.typography.body,
+                fontSize = 15.sp,
+                lineHeight = 20.sp,
+                fontWeight = FontWeight.Medium,
+                color = colors.onSurface,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        return
     }
+    val paddingValue = 4.dp
+    val miuix = isMiuixComposition
+    val tileStyle = if (miuix) Modifier.miuixBoardTile() else Modifier
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -262,49 +300,34 @@ private fun ForumBoardGridItemView(
             .padding(paddingValue)
             .fillMaxWidth()
             .then(tileStyle)
-            .clickable {
-                if (clickEnabled) {
-                    forumBoardViewModel.showTopicList(child)
-                }
-            }
+            .clickable(onClick = openBoard),
     ) {
-        // Miuix tiles are cards: give the icon and label room inside the card.
-        val tileInset = if (miuix || coui) 10.dp else paddingValue
+        val tileInset = if (miuix) 10.dp else paddingValue
         Spacer(modifier = Modifier.height(tileInset))
-        val resId = remember(child.fid, child.stid) { getResId(child) }
-        if (resId > 0) {
-            Image(
-                modifier = Modifier.size(imageSize),
-                painter = painterResource(id = resId),
-                contentDescription = ""
-            )
-        } else {
-            val url = child.iconUrl
-            Image(
-                modifier = Modifier.size(imageSize),
-                painter = rememberAsyncImagePainter(
-                    model = url,
-                    placeholder = painterResource(id = R.drawable.default_board_icon),
-                    error = painterResource(id = R.drawable.default_board_icon)
-                ),
-                contentDescription = ""
-            )
-        }
+        ForumBoardIcon(child, Modifier.size(48.dp))
         Text(
             modifier = Modifier
                 .padding(top = paddingValue, bottom = paddingValue)
-                .then(if (miuix || coui) Modifier.padding(horizontal = 8.dp) else Modifier),
-            color = when {
-                coui -> CouiTheme.colorScheme.onSurface
-                miuix -> miuixBoardTextColor()
-                else -> Color(context.resources.getColor(R.color.text_color, null))
-            },
+                .then(if (miuix) Modifier.padding(horizontal = 8.dp) else Modifier),
+            color = if (miuix) miuixBoardTextColor() else Color(context.resources.getColor(R.color.text_color, null)),
             text = child.name,
-            maxLines = if (miuix || coui) 1 else Int.MAX_VALUE,
-            overflow = if (miuix || coui) TextOverflow.Ellipsis else TextOverflow.Clip,
+            maxLines = if (miuix) 1 else Int.MAX_VALUE,
+            overflow = if (miuix) TextOverflow.Ellipsis else TextOverflow.Clip,
         )
         Spacer(modifier = Modifier.height(tileInset))
     }
+}
+
+@Composable
+private fun ForumBoardIcon(child: BoardEntity, modifier: Modifier) {
+    val resId = remember(child.fid, child.stid) { getResId(child) }
+    val painter = if (resId > 0) {
+        painterResource(id = resId)
+    } else {
+        val fallback = painterResource(id = R.drawable.default_board_icon)
+        rememberAsyncImagePainter(model = child.iconUrl, placeholder = fallback, error = fallback)
+    }
+    Image(painter = painter, contentDescription = null, modifier = modifier)
 }
 
 /** Resource ids of bundled board icons by fid; getIdentifier is a reflective lookup per call. */
@@ -332,6 +355,7 @@ fun ForumBoardBookmarkContent(
     val bookmarks by forumBoardViewModel.bookmarkBoardsLiveData.observeAsState(
         bookmark.children?.toList().orEmpty()
     )
+    val coui = LocalCouiBoardStyle.current
     val gridState = rememberLazyGridState()
     val coroutineScope = rememberCoroutineScope()
     val density = LocalDensity.current
@@ -377,18 +401,24 @@ fun ForumBoardBookmarkContent(
 
         if (UserManager.getUserList().size == 1) {
             Text(
-                modifier = Modifier.padding(if (isMiuixComposition) 16.dp else 8.dp),
+                modifier = Modifier.padding(if (coui || isMiuixComposition) 16.dp else 8.dp),
                 text = "建议登录多个账号，可有效改善跳转系统浏览器问题",
-                color = if (isMiuixComposition) miuixBoardHintColor() else Color.Unspecified,
+                color = when {
+                    coui -> CouiTheme.colorScheme.onSurfaceVariant
+                    isMiuixComposition -> miuixBoardHintColor()
+                    else -> Color.Unspecified
+                },
             )
         }
 
         LazyVerticalGrid(
-            columns = boardGridColumns(),
+            columns = boardGridColumns(coui),
             state = gridState,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 8.dp, end = 8.dp)
+                .padding(horizontal = if (coui) CouiPageDefaults.horizontalMargin else 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(if (coui) 10.dp else 0.dp),
+            verticalArrangement = Arrangement.spacedBy(if (coui) 10.dp else 0.dp),
         ) {
             itemsIndexed(
                 items = bookmarks,
@@ -528,11 +558,14 @@ fun ForumBoardContent(
     } else {
         val revision = forumBoardViewModel.boardContentRevision
         val boardList = remember(boardData.id, revision) { boardRenderSnapshot(boardData) }
+        val coui = LocalCouiBoardStyle.current
         LazyVerticalGrid(
-            columns = boardGridColumns(),
+            columns = boardGridColumns(coui),
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 8.dp, end = 8.dp)
+                .padding(horizontal = if (coui) CouiPageDefaults.horizontalMargin else 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(if (coui) 10.dp else 0.dp),
+            verticalArrangement = Arrangement.spacedBy(if (coui) 10.dp else 0.dp),
         ) {
             boardList.forEach { group ->
                 val it = group.board
@@ -576,7 +609,7 @@ private fun moveBookmarkWithPersistence(
  * Board grid columns: three on phones as before, more on wide windows (seven on a landscape
  * tablet) instead of stretching three tiles across the screen. Tiles stay at least 160dp wide.
  */
-private fun boardGridColumns(): GridCells = object : GridCells {
+private fun boardGridColumns(coui: Boolean): GridCells = if (coui) GridCells.Fixed(2) else object : GridCells {
     override fun Density.calculateCrossAxisCellSizes(availableSize: Int, spacing: Int): List<Int> {
         val minTile = 160.dp.roundToPx()
         val count = (availableSize / minTile).coerceIn(3, 8)
