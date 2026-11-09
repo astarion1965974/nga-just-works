@@ -11,6 +11,8 @@ import com.justwen.androidnga.ui.compose.miuix.MiuixFragment;
 import gov.anzong.androidnga.R;
 import gov.anzong.androidnga.ui.fragment.BasePreferenceFragment;
 import sp.phone.ui.fragment.BaseFragment;
+import sp.phone.ui.fragment.TopicHistoryFragment;
+import sp.phone.ui.fragment.TopicSearchFragment;
 
 public class LauncherSubActivity extends BaseActivity {
 
@@ -27,8 +29,8 @@ public class LauncherSubActivity extends BaseActivity {
         String fragmentStr = intent.getStringExtra("fragment");
         mFragmentClass = resolveFragmentClass(fragmentStr);
         super.onCreate(savedInstanceState);
-        if (isMiuixPage() && isFullMiuixFragment()) {
-            // The fragment draws its whole Miuix page, top app bar included.
+        if (isCouiPage() || (isMiuixPage() && isFullMiuixFragment())) {
+            // These fragments provide their own Compose top app bar.
             setMiuixContentView(R.id.main_content);
         } else {
             // Classic fragments get the Miuix top app bar above their content in the Miuix
@@ -61,6 +63,13 @@ public class LauncherSubActivity extends BaseActivity {
     @Override
     protected boolean isMiuixPage() {
         return isMiuixStyle();
+    }
+
+    @Override
+    public boolean isCouiPage() {
+        return isCouiStyle() && mFragmentClass != null
+                && (TopicHistoryFragment.class.isAssignableFrom(mFragmentClass)
+                || TopicSearchFragment.class.isAssignableFrom(mFragmentClass));
     }
 
     private boolean isFullMiuixFragment() {

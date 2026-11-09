@@ -3,7 +3,14 @@ name: Verify ColorOS 17 Build
 on:
   push:
     branches: [coui-preview]
-    paths: [.github/workflows/coui-preview.yml]
+    paths:
+      - .github/workflows/coui-preview.yml
+      - 'nga_phone_base_3.0/src/main/**'
+      - 'lib_base_ui_compose/src/main/**'
+
+concurrency:
+  group: coloros-preview
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -47,7 +54,7 @@ jobs:
           set -euo pipefail
           src_dir=nga_phone_base_3.0/build/outputs/apk/release
           test "$(find "$src_dir" -maxdepth 1 -type f -name '*.apk' ! -name '*unsigned*' | wc -l)" = 1
-          apk=NGA-Just-Works-COUI-4.5.1-arm64.apk
+          apk=NGA-Just-Works-COUI-build-$GITHUB_RUN_NUMBER-arm64.apk
           mkdir -p dist
           cp "$(find "$src_dir" -maxdepth 1 -type f -name '*.apk' ! -name '*unsigned*' -print -quit)" "dist/$apk"
           tools="$ANDROID_HOME/build-tools/37.0.0"

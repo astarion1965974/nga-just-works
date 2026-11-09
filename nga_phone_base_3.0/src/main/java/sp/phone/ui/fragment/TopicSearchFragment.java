@@ -21,6 +21,7 @@ import com.justwen.androidnga.ui.compose.miuix.MiuixFragment;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import gov.anzong.androidnga.R;
+import gov.anzong.androidnga.ui.coui.CouiForumPageKt;
 import gov.anzong.androidnga.activity.BaseActivity;
 import gov.anzong.androidnga.arouter.ARouterConstants;
 import gov.anzong.androidnga.base.util.ContextUtils;
@@ -135,7 +136,7 @@ public class TopicSearchFragment extends BaseFragment implements View.OnClickLis
      * the Miuix page renders what the adapter holds.
      */
     protected View wrapMiuix(View classicView) {
-        if (!MiuixChromeKt.isMiuixHost(getActivity())) {
+        if (!MiuixChromeKt.isMiuixHost(getActivity()) && !CouiForumPageKt.isCouiForumHost(getActivity())) {
             return classicView;
         }
         mMiuix = new MiuixTopicListBridge(this, this, mRequestParam.searchPost > 0);

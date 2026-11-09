@@ -93,7 +93,11 @@ private fun ReaderPages(backdrop: CouiBackdrop, tabs: MiuixReaderTabsState, call
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         itemsIndexed(pages) { index, label ->
+            val refresh = callbacks.onReplyLongPressRepeat
             ChipTab(
+                modifier = if (index == selected && refresh != null) {
+                    Modifier.holdToRefresh(refresh, callbacks.longPressRepeatMillis)
+                } else Modifier,
                 selected = index == selected,
                 onClick = {
                     if (index == selected) callbacks.onTabReselected() else callbacks.onTabSelected(index)
