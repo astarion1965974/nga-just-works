@@ -69,6 +69,12 @@ jobs:
           fi
 
           if [[ -z "$backup_sha" ]]; then
+            signed_releases="$(gh api "$api/releases?per_page=100" --paginate |
+              jq -r '.[] | select(.tag_name | startswith("coui-v")) | .tag_name')"
+            if [[ -n "$signed_releases" ]]; then
+              echo "::error::Restore the encrypted signing backup before publishing another APK."
+              exit 1
+            fi
             work="$(mktemp -d "$RUNNER_TEMP/nga-signing.XXXXXX")"
             trap 'rm -rf "$work"' EXIT
             keytool="$JAVA_HOME_21_X64/bin/keytool"
@@ -87,7 +93,12 @@ jobs:
               gh api --method POST "$api/git/blobs" --input - --jq .sha)"
             tree="$(jq -n --arg sha "$blob" '{tree:[{path:"backup.json", mode:"100644", type:"blob", sha:$sha}]}' |
               gh api --method POST "$api/git/trees" --input - --jq .sha)"
-            backup_sha="$(jq -n --arg tree "$tree" '{message:"Store encrypted NGA COUI signing backup", tree:$tree, parents:[]}' |
+            backup_sha="$(jq -n --arg tree "$tree" '{
+                message:"Store encrypted NGA COUI signing backup",
+                tree:$tree,
+                parents:[],
+                author:{name:"github-actions[bot]",email:"41898282+github-actions[bot]@users.noreply.github.com"}
+              } | .committer = .author' |
               gh api --method POST "$api/git/commits" --input - --jq .sha)"
             gh api --method POST "$api/git/refs" -f ref="refs/tags/$backup_tag" -f sha="$backup_sha" > /dev/null
           fi
