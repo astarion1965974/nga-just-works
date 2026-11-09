@@ -1,4 +1,4 @@
-name: Verify ColorOS 17 Build
+name: Build and Release ColorOS 17 APK
 
 on:
   workflow_dispatch:
@@ -23,6 +23,8 @@ jobs:
     if: ${{ github.repository == 'astarion1965974/nga-just-works' && github.ref == 'refs/heads/coui-preview' }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    outputs:
+      signed: ${{ steps.signing.outputs.ready }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -108,3 +110,31 @@ jobs:
           path: dist/
           if-no-files-found: error
           retention-days: 14
+
+  publish:
+    needs: build
+    if: needs.build.outputs.signed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: nga-coloros17-arm64
+          path: dist/
+      - name: Publish GitHub prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag=coui-v4.5.2
+          apk=NGA-Just-Works-COUI-4.5.2-arm64.apk
+          (cd dist && sha256sum -c "$apk.sha256")
+          if [[ "$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json isDraft --jq '.isDraft' 2>/dev/null || true)" == false ]]; then
+            echo "::notice::Release $tag is already published."
+            exit 0
+          fi
+          gh release create "$tag" "dist/$apk" "dist/$apk.sha256" --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" --prerelease --title "NGA Just Works COUI 4.5.2" \
+            --notes "ColorOS 17 / Android 17, ARM64. Includes COUI updates for home, navigation, About, AI and Labs settings, size controls, and the post and reply toolbar. This is the first release with a fixed signer. Earlier preview builds require a fresh install."
