@@ -181,12 +181,12 @@ jobs:
           set -euo pipefail
           src_dir=nga_phone_base_3.0/build/outputs/apk/release
           test "$(find "$src_dir" -maxdepth 1 -type f -name '*.apk' ! -name '*unsigned*' | wc -l)" = 1
-          apk=NGA-Just-Works-COUI-4.5.3-arm64.apk
+          apk=NGA-Just-Works-COUI-4.5.4-arm64.apk
           mkdir -p dist
           cp "$(find "$src_dir" -maxdepth 1 -type f -name '*.apk' ! -name '*unsigned*' -print -quit)" "dist/$apk"
           tools="$ANDROID_HOME/build-tools/37.0.0"
           "$tools/aapt" dump badging "dist/$apk" > "$RUNNER_TEMP/nga-apk-info"
-          grep -F "package: name='com.astarion.ngajustworks.coui' versionCode='4053' versionName='4.5.3'" "$RUNNER_TEMP/nga-apk-info"
+          grep -F "package: name='com.astarion.ngajustworks.coui' versionCode='4054' versionName='4.5.4'" "$RUNNER_TEMP/nga-apk-info"
           grep -Fx "sdkVersion:'37'" "$RUNNER_TEMP/nga-apk-info"
           grep -Fx "targetSdkVersion:'37'" "$RUNNER_TEMP/nga-apk-info"
           grep -Fx "native-code: 'arm64-v8a'" "$RUNNER_TEMP/nga-apk-info"
@@ -219,13 +219,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          tag=coui-v4.5.3
-          apk=NGA-Just-Works-COUI-4.5.3-arm64.apk
+          tag=coui-v4.5.4
+          apk=NGA-Just-Works-COUI-4.5.4-arm64.apk
           (cd dist && sha256sum -c "$apk.sha256")
           if [[ "$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json isDraft --jq '.isDraft' 2>/dev/null || true)" == false ]]; then
             echo "::notice::Release $tag is already published."
             exit 0
           fi
           gh release create "$tag" "dist/$apk" "dist/$apk.sha256" --repo "$GITHUB_REPOSITORY" \
-            --target "$GITHUB_SHA" --prerelease --title "NGA Just Works COUI 4.5.3" \
-            --notes "ColorOS 17 / Android 17, ARM64. Redesigned home board cards and topic lists, with COUI board tabs. Uses the same signing certificate as 4.5.2 for in-place upgrades."
+            --target "$GITHUB_SHA" --prerelease --title "NGA Just Works COUI 4.5.4" \
+            --notes "ColorOS 17 / Android 17, ARM64. Adds progressive topic and reader headers and a COUI reading layout. Uses the existing signing certificate for in-place upgrades."

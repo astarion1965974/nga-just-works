@@ -19,6 +19,9 @@ import android.view.animation.DecelerateInterpolator
 import android.view.animation.OvershootInterpolator
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.RelativeLayout
+import android.util.TypedValue
+import sp.phone.theme.ThemeManager
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -348,6 +351,67 @@ object MiuixReaderStyle {
         refresh?.setProgressBackgroundColorSchemeColor(ContextCompat.getColor(context, R.color.miuix_surface_container))
         loading?.setBackgroundColor(ContextCompat.getColor(context, R.color.miuix_surface))
         clearNavigationBar(list)
+    }
+
+    @JvmStatic
+    fun styleCouiFloor(item: View) {
+        val density = item.resources.displayMetrics.density
+        val dark = ThemeManager.getInstance().isNightMode
+        val title = if (dark) Color.rgb(240, 240, 242) else Color.rgb(28, 30, 33)
+        val summary = if (dark) Color.rgb(172, 176, 183) else Color.rgb(113, 118, 126)
+        item.background = GradientDrawable().apply {
+            cornerRadius = 18f * density
+            setColor(if (dark) Color.rgb(40, 41, 45) else Color.WHITE)
+        }
+        (item.layoutParams as? ViewGroup.MarginLayoutParams)?.setMargins(
+            (16 * density).toInt(), (5 * density).toInt(), (16 * density).toInt(), (5 * density).toInt(),
+        )
+        val header = (item as? ViewGroup)?.getChildAt(0) as? ViewGroup
+        header?.setPadding((16 * density).toInt(), (14 * density).toInt(), (16 * density).toInt(), (8 * density).toInt())
+        item.findViewById<TextView>(R.id.tv_nickName)?.apply {
+            setTextColor(title)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+            (layoutParams as? RelativeLayout.LayoutParams)?.apply {
+                width = ViewGroup.LayoutParams.WRAP_CONTENT
+                addRule(RelativeLayout.START_OF, R.id.tv_floor)
+            }
+        }
+        item.findViewById<TextView>(R.id.tv_post_time)?.apply {
+            setTextColor(summary)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+            (layoutParams as? RelativeLayout.LayoutParams)?.apply {
+                removeRule(RelativeLayout.ALIGN_PARENT_END)
+                removeRule(RelativeLayout.ALIGN_BOTTOM)
+                addRule(RelativeLayout.BELOW, R.id.tv_nickName)
+                addRule(RelativeLayout.END_OF, R.id.fl_avatar)
+            }
+        }
+        item.findViewById<TextView>(R.id.tv_floor)?.apply {
+            setTextColor(summary)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+            (layoutParams as? RelativeLayout.LayoutParams)?.apply {
+                removeRule(RelativeLayout.BELOW)
+                removeRule(RelativeLayout.ALIGN_TOP)
+                removeRule(RelativeLayout.ALIGN_BOTTOM)
+                addRule(RelativeLayout.ALIGN_TOP, R.id.tv_nickName)
+            }
+        }
+        item.findViewById<TextView>(R.id.tv_detail)?.apply {
+            setTextColor(summary)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+            (layoutParams as? RelativeLayout.LayoutParams)?.addRule(RelativeLayout.BELOW, R.id.tv_post_time)
+        }
+        item.findViewById<TextView>(R.id.tv_content)?.apply {
+            setPadding((16 * density).toInt(), paddingTop, (16 * density).toInt(), paddingBottom)
+            setLineSpacing(0f, 1.55f)
+        }
+    }
+
+    @JvmStatic
+    fun styleCouiFloorList(list: RecyclerView, refresh: SwipeRefreshLayout?) {
+        list.setBackgroundColor(Color.TRANSPARENT)
+        list.clipToPadding = false
+        refresh?.setBackgroundColor(Color.TRANSPARENT)
     }
 
     /** Adds the navigation bar height to the bottom padding, once insets are known. */

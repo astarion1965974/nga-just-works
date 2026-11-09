@@ -23,6 +23,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import com.justwen.androidnga.ui.compose.miuix.MiuixChromeKt;
 import gov.anzong.androidnga.ui.miuix.MiuixReaderStyle;
+import gov.anzong.androidnga.ui.coui.CouiForumPageKt;
 import butterknife.Unbinder;
 import gov.anzong.androidnga.R;
 import gov.anzong.androidnga.activity.BaseActivity;
@@ -409,11 +410,15 @@ public class ArticleListFragment extends BaseMvpFragment<ArticleListPresenter> i
                 mArticleAdapter::setAuthorLocations);
         mListView.setEmptyView(view.findViewById(R.id.empty_view));
         applyReplyFabClearance();
+        boolean couiReader = CouiForumPageKt.isCouiForumHost(getActivity());
         if (MiuixChromeKt.isMiuixHost(getActivity())) {
             mArticleAdapter.setMiuixStyle(true);
             MiuixReaderStyle.styleFloorList(mListView, mSwipeRefreshLayout, mLoadingView);
+        } else if (couiReader) {
+            mArticleAdapter.setCouiStyle(true);
+            MiuixReaderStyle.styleCouiFloorList(mListView, mSwipeRefreshLayout);
         }
-        if (PhoneConfiguration.getInstance().useSolidColorBackground() && !MiuixChromeKt.isMiuixHost(getActivity())) {
+        if (PhoneConfiguration.getInstance().useSolidColorBackground() && !MiuixChromeKt.isMiuixHost(getActivity()) && !couiReader) {
             mListView.addItemDecoration(new DividerItemDecoration(view.getContext(), DividerItemDecoration.VERTICAL));
         }
 

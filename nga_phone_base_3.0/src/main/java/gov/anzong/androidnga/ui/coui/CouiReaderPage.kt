@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,6 +34,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalDensity
+import androidx.recyclerview.widget.RecyclerView
+import gov.anzong.androidnga.R
 import androidx.compose.ui.viewinterop.AndroidView
 import com.itos.coui.backdrop.CouiBackdrop
 import com.itos.coui.chip.ChipTab
@@ -41,12 +45,14 @@ import com.itos.coui.floatingactionbutton.Fab
 import gov.anzong.androidnga.ui.miuix.MiuixReaderCallbacks
 import gov.anzong.androidnga.ui.miuix.MiuixReaderTabsState
 import kotlinx.coroutines.delay
+import java.util.WeakHashMap
 
 @Composable
 internal fun CouiReaderPage(activity: Activity, content: View, tabs: MiuixReaderTabsState, callbacks: MiuixReaderCallbacks) {
     val reply = callbacks.onReply
     CouiForumPage(
         activity = activity,
+        progressiveHeader = true,
         onTitleClick = callbacks.onTitleClick,
         extraTopBar = { backdrop ->
             if (tabs.pages.size > 1) ReaderPages(backdrop, tabs, callbacks)
@@ -65,13 +71,40 @@ internal fun CouiReaderPage(activity: Activity, content: View, tabs: MiuixReader
             }
         },
     ) { padding ->
+        val top = with(LocalDensity.current) { padding.calculateTopPadding().roundToPx() }
+        val originalPadding = remember(content) { WeakHashMap<RecyclerView, Int>() }
+        DisposableEffect(content, top) {
+            val listener = android.view.ViewTreeObserver.OnGlobalLayoutListener {
+                fun update(view: View) {
+                    if (view is RecyclerView && view.id == R.id.list) {
+                        val base = originalPadding.getOrPut(view) { view.paddingTop }
+                        if (view.paddingTop != base + top) {
+                            view.setPadding(view.paddingLeft, base + top, view.paddingRight, view.paddingBottom)
+                            view.clipToPadding = false
+                        }
+                    }
+                    if (view is ViewGroup) {
+                        for (index in 0 until view.childCount) update(view.getChildAt(index))
+                    }
+                }
+                update(content)
+            }
+            content.viewTreeObserver.addOnGlobalLayoutListener(listener)
+            onDispose {
+                if (content.viewTreeObserver.isAlive) content.viewTreeObserver.removeOnGlobalLayoutListener(listener)
+                originalPadding.forEach { (view, base) ->
+                    view.setPadding(view.paddingLeft, base, view.paddingRight, view.paddingBottom)
+                }
+                originalPadding.clear()
+            }
+        }
         AndroidView(
             factory = {
                 (content.parent as? ViewGroup)?.removeView(content)
                 content.visibility = View.VISIBLE
                 content
             },
-            modifier = Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding),
+            modifier = Modifier.fillMaxSize().padding(bottom = padding.calculateBottomPadding()).consumeWindowInsets(padding),
         )
     }
 }

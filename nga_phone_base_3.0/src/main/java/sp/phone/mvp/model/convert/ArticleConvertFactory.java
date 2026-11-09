@@ -128,6 +128,7 @@ public class ArticleConvertFactory {
         htmlData.setAlertInfo(row.getAlterinfo());
         htmlData.setDarkMode(ThemeManager.getInstance().isNightMode());
         htmlData.setMiuixStyle(ThemeManager.getInstance().isMiuixStyle());
+        htmlData.setCouiStyle(ThemeManager.getInstance().isCouiStyle());
         htmlData.setInBackList(row.get_isInBlackList());
         htmlData.setTextSize(PhoneConfiguration.getInstance().getTopicContentSize());
         htmlData.setEmotionSize(PhoneConfiguration.getInstance().getEmoticonSize());

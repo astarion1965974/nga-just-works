@@ -1,0 +1,10 @@
+body {
+    color: #000000;
+}
+
+div.quote {
+    background-color: #E8E8E8;
+}
+body { line-height: 1.55; word-break: normal; overflow-wrap: anywhere; margin: 0; padding: 0 16px; }
+div.quote { border-radius: 10px; padding: 10px 12px; margin: 8px 0; }
+img, video { max-width: 100%; height: auto; }

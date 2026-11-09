@@ -38,7 +38,7 @@ public class HtmlConvertFactory {
         }
 
         String html = builder.toString();
-        String style = HtmlStyleSheets.select(htmlData.isDarkMode(), htmlData.isMiuixStyle());
+        String style = HtmlStyleSheets.select(htmlData.isDarkMode(), htmlData.isMiuixStyle(), htmlData.isCouiStyle());
         return String.format(sHtmlTemplate, style, html);
     }
 

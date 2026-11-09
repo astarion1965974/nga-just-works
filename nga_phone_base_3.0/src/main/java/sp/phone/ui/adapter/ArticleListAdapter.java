@@ -61,6 +61,7 @@ public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.
 
     /** Floors render as Miuix cards when the host uses the Miuix appearance. */
     private boolean mMiuixStyle;
+    private boolean mCouiStyle;
 
     private static final String DEVICE_TYPE_IOS = "ios";
 
@@ -386,6 +387,10 @@ public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.
     }
 
     /** Called by the hosting fragment before the first bind. */
+    public void setCouiStyle(boolean couiStyle) {
+        mCouiStyle = couiStyle;
+    }
+
     public void setMiuixStyle(boolean miuixStyle) {
         mMiuixStyle = miuixStyle;
     }
@@ -452,6 +457,8 @@ public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.
         if (mMiuixStyle) {
             MiuixReaderStyle.styleFloorViews(view);
             MiuixReaderStyle.styleFloorCard(view);
+        } else if (mCouiStyle) {
+            MiuixReaderStyle.styleCouiFloor(view);
         }
         ArticleViewHolder viewHolder = new ArticleViewHolder(view);
         ViewGroup.LayoutParams lp = viewHolder.avatarIv.getLayoutParams();
@@ -521,7 +528,7 @@ public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.
             return;
         }
 
-        if (!mMiuixStyle && !PhoneConfiguration.getInstance().useSolidColorBackground()) {
+        if (!mMiuixStyle && !mCouiStyle && !PhoneConfiguration.getInstance().useSolidColorBackground()) {
             holder.itemView.setBackgroundResource(ThemeManager.getInstance().getBackgroundColor(position));
         }
 

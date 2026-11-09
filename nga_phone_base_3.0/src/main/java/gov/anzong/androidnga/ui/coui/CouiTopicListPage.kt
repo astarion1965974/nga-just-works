@@ -79,6 +79,7 @@ internal fun CouiTopicListPage(activity: Activity, state: MiuixTopicListState, c
     }
     CouiForumPage(
         activity = activity,
+        progressiveHeader = true,
         onTitleClick = callbacks.onTitleClick?.let { refresh ->
             {
                 scope.launch { listState.scrollToItem(0) }
@@ -100,7 +101,7 @@ internal fun CouiTopicListPage(activity: Activity, state: MiuixTopicListState, c
         val colors = CouiTheme.colorScheme
         val body: @Composable () -> Unit = {
             if (rows.isEmpty()) {
-                Box(Modifier.fillMaxSize().padding(bottom = padding.calculateBottomPadding()), contentAlignment = Alignment.Center) {
+                Box(Modifier.fillMaxSize().padding(top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding()), contentAlignment = Alignment.Center) {
                     if (state.initialLoading) {
                         CircularProgressIndicator(color = colors.accent)
                     } else {
@@ -119,7 +120,7 @@ internal fun CouiTopicListPage(activity: Activity, state: MiuixTopicListState, c
                     contentPadding = PaddingValues(
                         start = CouiPageDefaults.horizontalMargin,
                         end = CouiPageDefaults.horizontalMargin,
-                        top = 8.dp,
+                        top = padding.calculateTopPadding() + 8.dp,
                         bottom = padding.calculateBottomPadding() + if (post == null) 12.dp else 88.dp,
                     ),
                 ) {
@@ -142,7 +143,7 @@ internal fun CouiTopicListPage(activity: Activity, state: MiuixTopicListState, c
                 }
             }
         }
-        val bodyModifier = Modifier.fillMaxSize().padding(top = padding.calculateTopPadding()).consumeWindowInsets(padding)
+        val bodyModifier = Modifier.fillMaxSize().consumeWindowInsets(padding)
         val refresh = callbacks.onRefresh
         if (refresh == null) {
             Box(bodyModifier) { body() }

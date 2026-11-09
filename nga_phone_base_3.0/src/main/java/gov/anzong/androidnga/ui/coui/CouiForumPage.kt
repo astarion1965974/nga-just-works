@@ -8,6 +8,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
@@ -21,6 +25,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -39,6 +45,7 @@ import com.itos.coui.theme.LocalCouiContentColor
 import com.itos.coui.topappbar.TopAppBar
 import com.itos.coui.topappbar.CouiTopAppBarDefaults
 import com.itos.coui.topappbar.TopAppBarButton
+import com.itos.coui.topappbar.TopAppBarSurface
 import com.justwen.androidnga.ui.compose.miuix.MiuixChromeOwner
 import com.justwen.androidnga.ui.compose.miuix.performHostMenuItem
 import com.justwen.androidnga.ui.compose.miuix.rememberHostOptionsMenu
@@ -75,6 +82,7 @@ internal fun CouiForumPage(
     pageTitle: String? = null,
     onTitleClick: (() -> Unit)? = null,
     extraTopBar: (@Composable (CouiBackdrop) -> Unit)? = null,
+    progressiveHeader: Boolean = false,
     floatingAction: (@Composable BoxScope.() -> Unit)? = null,
     content: @Composable (PaddingValues) -> Unit,
 ) {
@@ -83,6 +91,40 @@ internal fun CouiForumPage(
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {
+                if (progressiveHeader) {
+                    val chipBackdrop = rememberCouiBackdrop()
+                    TopAppBarSurface(bottomExtension = 24.dp) {
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().statusBarsPadding().height(52.dp)
+                                    .padding(horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                CouiBackButton {
+                                    (activity as? ComponentActivity)?.onBackPressedDispatcher?.onBackPressed()
+                                        ?: activity.finish()
+                                }
+                                Text(
+                                    text = title,
+                                    kind = CouiTextKind.Toolbar,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f).padding(start = 12.dp).then(
+                                        if (onTitleClick == null) Modifier else Modifier.clickable(onClick = onTitleClick),
+                                    ),
+                                )
+                                CouiForumMenu(activity)
+                            }
+                            if (extraTopBar != null) {
+                                Box {
+                                    Box(Modifier.matchParentSize().couiBackdrop(chipBackdrop)
+                                        .background(CouiTheme.colorScheme.background.copy(alpha = 0.12f)))
+                                    extraTopBar(chipBackdrop)
+                                }
+                            }
+                        }
+                    }
+                } else {
                 CouiSolidHeader { backdrop ->
                     Column {
                         TopAppBar(
@@ -107,6 +149,7 @@ internal fun CouiForumPage(
                         )
                         extraTopBar?.invoke(backdrop)
                     }
+                }
                 }
             },
             floatingActionButton = floatingAction,
