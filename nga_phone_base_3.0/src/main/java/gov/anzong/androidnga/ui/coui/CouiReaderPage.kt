@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalDensity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import gov.anzong.androidnga.R
 import androidx.compose.ui.viewinterop.AndroidView
 import com.itos.coui.backdrop.CouiBackdrop
@@ -75,34 +76,42 @@ internal fun CouiReaderPage(activity: Activity, content: View, tabs: MiuixReader
         val top = with(LocalDensity.current) { padding.calculateTopPadding().roundToPx() }
         val originalPadding = remember(content) { WeakHashMap<RecyclerView, Int>() }
         DisposableEffect(content, top) {
-            val listener = android.view.ViewTreeObserver.OnGlobalLayoutListener {
-                fun update(view: View) {
-                    if (view is RecyclerView && view.id == R.id.list) {
-                        val base = originalPadding.getOrPut(view) { view.paddingTop }
-                        if (view.paddingTop != base + top) {
-                            // LinearLayoutManager keeps already laid-out rows at their absolute position when
-                            // padding changes, so a list laid out before this inset left floor 1 under the bar.
-                            // Re-anchor the first visible row relative to the new padding; this keeps both the
-                            // default "open at floor 1" position and pid/notification anchor jumps intact.
-                            val layout = view.layoutManager as? LinearLayoutManager
-                            val first = layout?.findFirstVisibleItemPosition() ?: RecyclerView.NO_POSITION
-                            val offset = if (first == RecyclerView.NO_POSITION) null else {
-                                layout?.findViewByPosition(first)?.let { layout.getDecoratedTop(it) - view.paddingTop }
-                            }
-                            view.setPadding(view.paddingLeft, base + top, view.paddingRight, view.paddingBottom)
-                            view.clipToPadding = false
-                            if (layout != null && offset != null) layout.scrollToPositionWithOffset(first, offset)
-                        }
+            // Returns true when a list's padding had to change. Called before every draw so the list is
+            // re-anchored in the same frame and the user never sees it jump from the old position.
+            fun update(view: View): Boolean {
+                if (view is RecyclerView && view.id == R.id.list) {
+                    val base = originalPadding.getOrPut(view) { view.paddingTop }
+                    if (view.paddingTop == base + top) return false
+                    // LinearLayoutManager keeps laid-out rows at their absolute position when padding changes,
+                    // so re-anchor the first visible row relative to the new padding. This keeps both the default
+                    // "open at floor 1" position and pid/notification anchor jumps intact.
+                    val layout = view.layoutManager as? LinearLayoutManager
+                    val first = layout?.findFirstVisibleItemPosition() ?: RecyclerView.NO_POSITION
+                    val offset = if (first == RecyclerView.NO_POSITION) null else {
+                        layout?.findViewByPosition(first)?.let { layout.getDecoratedTop(it) - view.paddingTop }
                     }
-                    if (view is ViewGroup) {
-                        for (index in 0 until view.childCount) update(view.getChildAt(index))
+                    view.setPadding(view.paddingLeft, base + top, view.paddingRight, view.paddingBottom)
+                    view.clipToPadding = false
+                    if (layout != null && offset != null) layout.scrollToPositionWithOffset(first, offset)
+                    // The floor list runs under the blurred top bar; move the refresh spinner below it.
+                    generateSequence(view.parent) { it.parent }.filterIsInstance<SwipeRefreshLayout>().firstOrNull()?.let { refresh ->
+                        val distance = (64 * view.resources.displayMetrics.density).toInt()
+                        refresh.setProgressViewOffset(false, top - refresh.progressCircleDiameter, top + distance)
                     }
+                    return true
                 }
-                update(content)
+                var changed = false
+                if (view is ViewGroup) {
+                    for (index in 0 until view.childCount) changed = update(view.getChildAt(index)) || changed
+                }
+                return changed
             }
-            content.viewTreeObserver.addOnGlobalLayoutListener(listener)
+            update(content)
+            // Skip the frame in which padding changed; the next frame is drawn already re-anchored.
+            val listener = android.view.ViewTreeObserver.OnPreDrawListener { !update(content) }
+            content.viewTreeObserver.addOnPreDrawListener(listener)
             onDispose {
-                if (content.viewTreeObserver.isAlive) content.viewTreeObserver.removeOnGlobalLayoutListener(listener)
+                if (content.viewTreeObserver.isAlive) content.viewTreeObserver.removeOnPreDrawListener(listener)
                 originalPadding.forEach { (view, base) ->
                     view.setPadding(view.paddingLeft, base, view.paddingRight, view.paddingBottom)
                 }

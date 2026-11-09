@@ -26,6 +26,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -148,10 +150,21 @@ internal fun CouiTopicListPage(activity: Activity, state: MiuixTopicListState, c
         if (refresh == null) {
             Box(bodyModifier) { body() }
         } else {
+            val refreshing = state.refreshing && !state.initialLoading
+            val pullState = rememberPullToRefreshState()
             PullToRefreshBox(
-                isRefreshing = state.refreshing && !state.initialLoading,
+                isRefreshing = refreshing,
                 onRefresh = refresh,
                 modifier = bodyModifier,
+                state = pullState,
+                // The list runs under the blurred top bar; start the indicator below it so the pull is visible.
+                indicator = {
+                    PullToRefreshDefaults.Indicator(
+                        state = pullState,
+                        isRefreshing = refreshing,
+                        modifier = Modifier.align(Alignment.TopCenter).padding(top = padding.calculateTopPadding()),
+                    )
+                },
             ) { body() }
         }
         pendingDelete?.let { (row, message) ->
