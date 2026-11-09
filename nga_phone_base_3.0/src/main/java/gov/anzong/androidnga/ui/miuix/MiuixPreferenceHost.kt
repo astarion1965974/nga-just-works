@@ -17,6 +17,8 @@ import com.justwen.androidnga.ui.compose.miuix.MiuixPage
 import com.justwen.androidnga.ui.compose.miuix.MiuixChromeOwner
 import com.justwen.androidnga.ui.compose.miuix.NgaMiuixTheme
 import com.justwen.androidnga.ui.compose.miuix.rememberHostOptionsMenu
+import gov.anzong.androidnga.ui.coui.CouiPreferencePage
+import sp.phone.theme.ThemeManager
 
 /**
  * Wraps the view of a [PreferenceFragmentCompat] in a Miuix page.
@@ -26,7 +28,10 @@ import com.justwen.androidnga.ui.compose.miuix.rememberHostOptionsMenu
  * to [revision] and recompose the Miuix rows. Clicks go through [Preference.performClick],
  * which the fragment's own onPreferenceTreeClick / dialog handling still receives.
  */
-internal class MiuixPreferenceHost(private val fragment: PreferenceFragmentCompat) {
+internal class MiuixPreferenceHost(
+    private val fragment: PreferenceFragmentCompat,
+    private val coui: Boolean,
+) {
 
     private var revision by mutableIntStateOf(0)
 
@@ -52,9 +57,18 @@ internal class MiuixPreferenceHost(private val fragment: PreferenceFragmentCompa
         val compose = ComposeView(context).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
-                NgaMiuixTheme {
-                    val activity = fragment.activity
-                    val chrome = (activity as? MiuixChromeOwner)?.miuixChrome
+                val activity = fragment.activity
+                val chrome = (activity as? MiuixChromeOwner)?.miuixChrome
+                if (coui) {
+                    CouiPreferencePage(
+                        title = chrome?.title.orEmpty(),
+                        dark = ThemeManager.getInstance().isNightMode(),
+                        screen = fragment.preferenceScreen,
+                        revision = revision,
+                        onBack = { activity?.onBackPressedDispatcher?.onBackPressed() },
+                        onClick = Preference::performClickCompat,
+                    )
+                } else NgaMiuixTheme {
                     val menu = rememberHostOptionsMenu(activity)
                     MiuixPage(
                         title = chrome?.title.orEmpty(),

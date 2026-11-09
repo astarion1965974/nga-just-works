@@ -31,7 +31,7 @@ public class ThemeManager implements SharedPreferences.OnSharedPreferenceChangeL
             R.style.AppThemeDayNightBlack,
     };
 
-    private boolean mMiuixStyle;
+    private String mUiStyle;
 
     private int mThemeIndex;
 
@@ -56,7 +56,7 @@ public class ThemeManager implements SharedPreferences.OnSharedPreferenceChangeL
             mNightModeFollowSystem = sp.getBoolean(key, Constants.NIGHT_MODE_FOLLOW_SYSTEM_DEFAULT);
             applyDayNight();
         } else if (key.equals(PreferenceKey.KEY_UI_STYLE)) {
-            mMiuixStyle = readMiuixStyle(sp);
+            mUiStyle = readUiStyle(sp);
         }
         mWebViewTheme = null;
     }
@@ -73,12 +73,12 @@ public class ThemeManager implements SharedPreferences.OnSharedPreferenceChangeL
         mNightMode = sp.getBoolean(PreferenceKey.NIGHT_MODE, false);
         mThemeIndex = Integer.parseInt(sp.getString(PreferenceKey.MATERIAL_THEME, Constants.MATERIAL_THEME_DEFAULT));
         mNightModeFollowSystem = sp.getBoolean(PreferenceKey.KEY_NIGHT_MODE_FOLLOW_SYSTEM, Constants.NIGHT_MODE_FOLLOW_SYSTEM_DEFAULT);
-        mMiuixStyle = readMiuixStyle(sp);
+        mUiStyle = readUiStyle(sp);
         applyDayNightDelay(0);
     }
 
-    private static boolean readMiuixStyle(SharedPreferences sp) {
-        return Constants.UI_STYLE_MIUIX.equals(sp.getString(PreferenceKey.KEY_UI_STYLE, Constants.UI_STYLE_DEFAULT));
+    private static String readUiStyle(SharedPreferences sp) {
+        return sp.getString(PreferenceKey.KEY_UI_STYLE, Constants.UI_STYLE_DEFAULT);
     }
 
     public static ThemeManager getInstance() {
@@ -159,12 +159,16 @@ public class ThemeManager implements SharedPreferences.OnSharedPreferenceChangeL
      * 外观为 Miuix 时，所有页面改用 Miuix 组件绘制；经典外观保持原有界面不变。
      */
     public boolean isMiuixStyle() {
-        return mMiuixStyle;
+        return Constants.UI_STYLE_MIUIX.equals(mUiStyle);
+    }
+
+    public boolean isCouiStyle() {
+        return Constants.UI_STYLE_COUI.equals(mUiStyle);
     }
 
     @StyleRes
     public int getTheme(boolean toolbarEnabled) {
-        if (mMiuixStyle) {
+        if (isMiuixStyle()) {
             // Miuix pages draw their own top app bar; a window ActionBar would add a second one.
             return R.style.AppThemeDayNightMiuix_NoActionBar;
         }

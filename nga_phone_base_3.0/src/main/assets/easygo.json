@@ -1,6 +1,6 @@
 {
   "easyGoVersion": "1.0",
-  "client": "com.github.tophtab.ngajustworks",
+  "client": "com.astarion.ngajustworks.coui",
   "logicEntities": [
     {
       "head": {

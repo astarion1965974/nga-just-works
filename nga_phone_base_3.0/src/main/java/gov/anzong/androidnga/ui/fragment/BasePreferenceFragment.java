@@ -14,6 +14,7 @@ import androidx.preference.PreferenceGroup;
 import com.justwen.androidnga.ui.compose.miuix.MiuixChromeKt;
 import com.justwen.androidnga.ui.compose.miuix.MiuixFragment;
 
+import gov.anzong.androidnga.activity.SettingsActivity;
 import gov.anzong.androidnga.ui.miuix.MiuixPreferenceHost;
 
 public abstract class BasePreferenceFragment extends PreferenceFragmentCompat
@@ -28,10 +29,12 @@ public abstract class BasePreferenceFragment extends PreferenceFragmentCompat
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View classicView = super.onCreateView(inflater, container, savedInstanceState);
-        if (!MiuixChromeKt.isMiuixHost(getActivity())) {
+        boolean coui = getActivity() instanceof SettingsActivity
+                && ((SettingsActivity) getActivity()).isCouiPage();
+        if (!coui && !MiuixChromeKt.isMiuixHost(getActivity())) {
             return classicView;
         }
-        mMiuixHost = new MiuixPreferenceHost(this);
+        mMiuixHost = new MiuixPreferenceHost(this, coui);
         return mMiuixHost.wrap(classicView);
     }
 

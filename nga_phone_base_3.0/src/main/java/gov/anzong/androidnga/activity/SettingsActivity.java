@@ -4,29 +4,42 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewAnimationUtils;
+import android.widget.FrameLayout;
 
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
 import gov.anzong.androidnga.R;
 import gov.anzong.androidnga.base.util.ThemeUtils;
+import sp.phone.theme.ThemeManager;
 import sp.phone.ui.fragment.SettingsFragment;
 
 public class SettingsActivity extends BaseActivity {
 
     public static boolean sRecreated;
+    private boolean mCouiPage;
+
+    public boolean isCouiPage() {
+        return mCouiPage;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         setToolbarEnabled(true);
+        mCouiPage = ThemeManager.getInstance().isCouiStyle();
+        setComposeEnabled(mCouiPage);
         super.onCreate(savedInstanceState);
-        if (isMiuixPage()) {
+        if (mCouiPage) {
+            FrameLayout container = new FrameLayout(this);
+            container.setId(R.id.container);
+            setContentView(container);
+        } else if (isMiuixPage()) {
             setMiuixContentView(R.id.container);
         } else {
             setContentView(R.layout.activity_settings);
         }
         setupFragment();
-        if (!isMiuixPage()) {
+        if (!mCouiPage && !isMiuixPage()) {
             setupActionBar();
         }
         if (sRecreated) {

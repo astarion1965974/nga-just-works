@@ -36,7 +36,7 @@ android {
     compileSdk project.compileSdkVersion
 
     defaultConfig {
-        applicationId "com.github.tophtab.ngajustworks"
+        applicationId "com.astarion.ngajustworks.coui"
         minSdkVersion project.minSdkVersion
         targetSdkVersion project.targetSdkVersion
         resConfigs "zh", "en"
@@ -117,6 +117,7 @@ android {
         jvmTarget = '17'
     }
     buildFeatures {
+        buildConfig true
         compose true
     }
     packagingOptions {
@@ -135,6 +136,7 @@ android {
 }
 
 dependencies {
+    implementation "io.github.itoseo:coui:0.0.1-alpha9"
     implementation "com.google.android.material:material:$androidx_material_version"
     implementation "androidx.cardview:cardview:1.0.0"
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"

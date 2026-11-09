@@ -30,5 +30,6 @@ public class Constants {
     public static final boolean NIGHT_MODE_FOLLOW_SYSTEM_DEFAULT = true;
     public static final String UI_STYLE_CLASSIC = "classic";
     public static final String UI_STYLE_MIUIX = "miuix";
+    public static final String UI_STYLE_COUI = "coui";
     public static final String UI_STYLE_DEFAULT = UI_STYLE_CLASSIC;
 }

@@ -50,7 +50,8 @@ public class SettingsFragment extends BasePreferenceFragment
         findPreference(PreferenceKey.NIGHT_MODE).setEnabled(!ThemeManager.getInstance().isNightModeFollowSystem());
         findPreference(PreferenceKey.MATERIAL_THEME).setEnabled(!ThemeManager.getInstance().isNightMode());
         // 经典外观的配色方案在 Miuix 外观下不起作用。
-        findPreference(PreferenceKey.MATERIAL_THEME).setVisible(!ThemeManager.getInstance().isMiuixStyle());
+        findPreference(PreferenceKey.MATERIAL_THEME).setVisible(!ThemeManager.getInstance().isMiuixStyle()
+                && !ThemeManager.getInstance().isCouiStyle());
         // 图片域名的选择页带输入框，Miuix 外观下也沿用它，而不是普通下拉。
         findPreference(PreferenceKey.KEY_IMAGE_DOMAIN).getExtras().putBoolean(MiuixPreferencesKt.EXTRA_CUSTOM_DIALOG, true);
         updateTabletOnlyPreferences();

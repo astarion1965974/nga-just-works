@@ -1,6 +1,6 @@
 [versions]
-gradle = "8.10.1"
-kotlin = "2.2.21"
+gradle = "9.4.1"
+kotlin = "2.4.20"
 fastjson2 = "2.0.59.android8"
 coroutines = "1.10.2"
 

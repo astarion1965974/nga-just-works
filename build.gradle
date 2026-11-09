@@ -72,8 +72,8 @@ task clean(type: Delete) {
     delete rootProject.buildDir
 }
 
-def localAppVersionName = '4.5.0'
-def localAppVersionCode = 4050
+def localAppVersionName = '4.5.1'
+def localAppVersionCode = 4051
 def ciVersionName = providers.environmentVariable('CI_VERSION_NAME').orNull
 def ciVersionCode = providers.environmentVariable('CI_VERSION_CODE').orNull
 
@@ -125,9 +125,9 @@ tasks.register('verifyReleaseTag') {
 }
 
 project.ext {
-    minSdkVersion = 29
-    targetSdkVersion = 36
-    compileSdkVersion = 36
+    minSdkVersion = 37
+    targetSdkVersion = 37
+    compileSdkVersion = 37
     appVersionName = effectiveAppVersionName
     appVersionCode = effectiveAppVersionCode
 

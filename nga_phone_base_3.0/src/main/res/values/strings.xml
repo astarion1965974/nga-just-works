@@ -3,7 +3,7 @@
     <string name="title_show_with_app_api">帖子详情兼容模式</string>
     <string name="summary_show_with_app_api">普通方式无法解析帖子时，尝试兼容方式阅读。</string>
 
-    <string name="app_name">NGA Just Works</string>
+    <string name="app_name">NGA Just Works COUI</string>
     <string name="menu_login">登录</string>
     <string name="menu_setting">设置</string>
     <string name="menu_exit">退出</string>
@@ -338,6 +338,7 @@
     <string name="setting_home_layout_compact">紧凑</string>
     <string name="setting_ui_style_classic">经典</string>
     <string name="setting_ui_style_miuix">Miuix</string>
+    <string name="setting_ui_style_coui" translatable="false">ColorOS (COUI)</string>
     <string name="miuix_switch_account">切换账号</string>
     <string name="summary_show_with_webview">加载出错时默认使用内置浏览器打开</string>
     <string name="title_show_with_webview">使用内置浏览器打开</string>
