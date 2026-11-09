@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -30,6 +31,13 @@ import com.justwen.androidnga.ui.compose.miuix.MiuixNavIcon
 import com.justwen.androidnga.ui.compose.miuix.MiuixPage
 import com.justwen.androidnga.ui.compose.miuix.NgaMiuixTheme
 import com.justwen.androidnga.ui.compose.miuix.miuixListPadding
+import gov.anzong.androidnga.ui.coui.CouiForumPage
+import gov.anzong.androidnga.ui.coui.isCouiForumHost
+import com.itos.coui.layout.Divider as CouiDivider
+import com.itos.coui.layout.Group as CouiGroup
+import com.itos.coui.slider.Slider as CouiSlider
+import com.itos.coui.text.CouiTextKind
+import com.itos.coui.text.Text as CouiText
 import kotlin.math.roundToInt
 import top.yukonga.miuix.kmp.basic.Slider
 import top.yukonga.miuix.kmp.basic.SmallTitle
@@ -57,7 +65,9 @@ fun miuixSizeSettingsView(activity: Activity, items: List<MiuixSizeItem>, previe
     ComposeView(activity).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         setContent {
-            NgaMiuixTheme {
+            if (isCouiForumHost(activity)) {
+                CouiSizes(activity, items, preview)
+            } else NgaMiuixTheme {
                 val chrome = (activity as? MiuixChromeOwner)?.miuixChrome
                 MiuixPage(
                     title = chrome?.title.orEmpty(),
@@ -131,4 +141,44 @@ private fun SizeRow(item: MiuixSizeItem) {
 /** Applies the post text zoom to the classic preview WebView. */
 fun applyPreviewZoom(webView: WebView, zoom: Int) {
     webView.settings.textZoom = zoom
+}
+
+@Composable
+private fun CouiSizes(activity: Activity, items: List<MiuixSizeItem>, preview: View) {
+    CouiForumPage(activity) { padding ->
+        Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)
+            .verticalScroll(rememberScrollState()).padding(bottom = 16.dp)) {
+            CouiGroup(title = "大小") {
+                items.forEachIndexed { index, item ->
+                    if (index > 0) CouiDivider()
+                    var value by remember(item) { mutableFloatStateOf(item.initial.coerceIn(item.min, item.max).toFloat()) }
+                    Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            CouiText(text = item.title, kind = CouiTextKind.PreferenceTitle, modifier = Modifier.weight(1f))
+                            CouiText(text = value.roundToInt().toString(), kind = CouiTextKind.PreferenceValue)
+                        }
+                        CouiSlider(
+                            modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                            value = value,
+                            valueRange = item.min.toFloat()..item.max.toFloat(),
+                            onValueChange = {
+                                value = it
+                                item.onPreview(it.roundToInt())
+                            },
+                            onValueChangeFinished = { item.onCommit(value.roundToInt()) },
+                        )
+                    }
+                }
+            }
+            CouiGroup(title = "预览") {
+                AndroidView(
+                    factory = {
+                        (preview.parent as? android.view.ViewGroup)?.removeView(preview)
+                        preview
+                    },
+                    modifier = Modifier.fillMaxWidth().height(160.dp).padding(12.dp),
+                )
+            }
+        }
+    }
 }

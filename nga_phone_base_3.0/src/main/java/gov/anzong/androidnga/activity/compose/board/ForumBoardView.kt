@@ -5,6 +5,13 @@ import android.content.SharedPreferences
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
+import androidx.compose.runtime.staticCompositionLocalOf
+import com.itos.coui.layout.CouiPageDefaults
+import com.itos.coui.text.CouiTextKind
+import com.itos.coui.text.Text as CouiText
+import com.itos.coui.theme.CouiTheme
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -68,6 +75,8 @@ import gov.anzong.androidnga.ui.TabletSplit
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
+
+internal val LocalCouiBoardStyle = staticCompositionLocalOf { false }
 
 @Suppress("ModifierParameter")
 @Composable
@@ -207,6 +216,10 @@ private fun homeFillsScreen(): Boolean {
 
 @Composable
 fun ForumBoardGroupView(board: BoardEntity, context: Context = ContextUtils.getContext()) {
+    if (LocalCouiBoardStyle.current) {
+        CouiText(text = board.name, kind = CouiTextKind.GroupTitle, modifier = Modifier.padding(16.dp))
+        return
+    }
     if (isMiuixComposition) {
         SmallTitle(text = board.name)
         return
@@ -236,13 +249,19 @@ private fun ForumBoardGridItemView(
     val paddingValue = 4.dp
     val imageSize = 48.dp
     val miuix = isMiuixComposition
+    val coui = LocalCouiBoardStyle.current
+    val tileStyle = when {
+        coui -> Modifier.clip(CouiPageDefaults.shape).background(CouiTheme.colorScheme.card)
+        miuix -> Modifier.miuixBoardTile()
+        else -> Modifier
+    }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = modifier
             .padding(paddingValue)
             .fillMaxWidth()
-            .then(if (miuix) Modifier.miuixBoardTile() else Modifier)
+            .then(tileStyle)
             .clickable {
                 if (clickEnabled) {
                     forumBoardViewModel.showTopicList(child)
@@ -250,7 +269,7 @@ private fun ForumBoardGridItemView(
             }
     ) {
         // Miuix tiles are cards: give the icon and label room inside the card.
-        val tileInset = if (miuix) 10.dp else paddingValue
+        val tileInset = if (miuix || coui) 10.dp else paddingValue
         Spacer(modifier = Modifier.height(tileInset))
         val resId = remember(child.fid, child.stid) { getResId(child) }
         if (resId > 0) {
@@ -274,11 +293,15 @@ private fun ForumBoardGridItemView(
         Text(
             modifier = Modifier
                 .padding(top = paddingValue, bottom = paddingValue)
-                .then(if (miuix) Modifier.padding(horizontal = 8.dp) else Modifier),
-            color = if (miuix) miuixBoardTextColor() else Color(context.resources.getColor(R.color.text_color, null)),
+                .then(if (miuix || coui) Modifier.padding(horizontal = 8.dp) else Modifier),
+            color = when {
+                coui -> CouiTheme.colorScheme.onSurface
+                miuix -> miuixBoardTextColor()
+                else -> Color(context.resources.getColor(R.color.text_color, null))
+            },
             text = child.name,
-            maxLines = if (miuix) 1 else Int.MAX_VALUE,
-            overflow = if (miuix) TextOverflow.Ellipsis else TextOverflow.Clip,
+            maxLines = if (miuix || coui) 1 else Int.MAX_VALUE,
+            overflow = if (miuix || coui) TextOverflow.Ellipsis else TextOverflow.Clip,
         )
         Spacer(modifier = Modifier.height(tileInset))
     }

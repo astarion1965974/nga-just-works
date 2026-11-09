@@ -72,13 +72,14 @@ internal fun CouiBackButton(onBack: () -> Unit) {
 @Composable
 internal fun CouiForumPage(
     activity: Activity,
+    pageTitle: String? = null,
     onTitleClick: (() -> Unit)? = null,
     extraTopBar: (@Composable (CouiBackdrop) -> Unit)? = null,
     floatingAction: (@Composable BoxScope.() -> Unit)? = null,
     content: @Composable (PaddingValues) -> Unit,
 ) {
     CouiTheme(darkTheme = ThemeManager.getInstance().isNightMode) {
-        val title = (activity as? MiuixChromeOwner)?.miuixChrome?.title.orEmpty()
+        val title = pageTitle ?: (activity as? MiuixChromeOwner)?.miuixChrome?.title.orEmpty()
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {
@@ -115,7 +116,7 @@ internal fun CouiForumPage(
 }
 
 @Composable
-private fun CouiForumMenu(activity: Activity) {
+internal fun CouiForumMenu(activity: Activity) {
     val entries = rememberHostOptionsMenu(activity)
     val search = entries.firstOrNull { it.item.itemId == R.id.menu_search && it.asAction }
     if (search != null) {
@@ -123,7 +124,17 @@ private fun CouiForumMenu(activity: Activity) {
             Icon(Icons.Default.Search, search.title, tint = LocalCouiContentColor.current)
         }
     }
-    val overflow = entries.filter { it != search }
+    val send = entries.firstOrNull { it.item.itemId == R.id.send }
+    if (send != null) {
+        TopAppBarButton(
+            onClick = { activity.performHostMenuItem(send.item) },
+            enabled = send.enabled,
+            text = true,
+        ) {
+            Text(text = send.title, kind = CouiTextKind.Toolbar, color = LocalCouiContentColor.current)
+        }
+    }
+    val overflow = entries.filter { it != search && it != send }
     if (overflow.isEmpty()) return
     val anchor = rememberCouiMenuAnchor()
     var expanded by remember { mutableStateOf(false) }

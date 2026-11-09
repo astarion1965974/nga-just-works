@@ -75,6 +75,7 @@ import gov.anzong.androidnga.activity.compose.board.ForumBoardView
 import gov.anzong.androidnga.activity.compose.board.ForumBoardViewModel
 import kotlinx.coroutines.launch
 import sp.phone.common.User
+import sp.phone.theme.ThemeManager
 
 class NavigationDrawerFragment : BaseComposeFragment() {
 
@@ -93,8 +94,10 @@ class NavigationDrawerFragment : BaseComposeFragment() {
         return ComposeView(inflater.context).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
-                if (isMiuixHost(activity)) {
-                    MiuixHome()
+                if (ThemeManager.getInstance().isCouiStyle) {
+                    StyledHome(coui = true)
+                } else if (isMiuixHost(activity)) {
+                    StyledHome(coui = false)
                 } else {
                     AppTheme {
                         NavigationDrawerView()
@@ -105,17 +108,13 @@ class NavigationDrawerFragment : BaseComposeFragment() {
     }
 
     @Composable
-    private fun MiuixHome() {
+    private fun StyledHome(coui: Boolean) {
         val activity = requireActivity()
         val replyCount by viewModel.replyCount.observeAsState()
         val users by UserManager.getUserListLiveData().observeAsState(emptyList())
         // Accounts logged in on this device have no avatar until their profile is fetched.
         LaunchedEffect(users.map { it.userId to it.avatarUrl }) { DrawerAvatarLoader.loadMissing() }
-        MiuixHomeScreen(
-            title = activity.title.toString(),
-            menu = getOptionMenuData(),
-            forumBoardViewModel = forumBoardViewModel,
-            entries = listOf(
+        val entries = listOf(
                 MiuixDrawerEntry("登录账号", MiuixIcons.Contacts) { viewModel.startLoginPage(activity) },
                 MiuixDrawerEntry("添加版面ID", MiuixIcons.AddCircle) {
                     viewModel.showAddBoardDialog(this@NavigationDrawerFragment)
@@ -133,18 +132,24 @@ class NavigationDrawerFragment : BaseComposeFragment() {
                 ) {
                     viewModel.startNotificationActivity(activity)
                 },
-            ),
-            footer = MiuixDrawerEntry("关于", MiuixIcons.Info) {
-                viewModel.startAboutNgaClient(activity)
-            },
-            onAccountClick = { user, count ->
-                if (count > 0 && user != null) {
-                    viewModel.startProfilePage(activity, user)
-                } else {
-                    viewModel.startLoginPage(activity)
-                }
-            },
         )
+        val footer = MiuixDrawerEntry("关于", MiuixIcons.Info) {
+            viewModel.startAboutNgaClient(activity)
+        }
+        val onAccountClick: (User?, Int) -> Unit = { user, count ->
+            if (count > 0 && user != null) {
+                viewModel.startProfilePage(activity, user)
+            } else {
+                viewModel.startLoginPage(activity)
+            }
+        }
+        val title = activity.title.toString()
+        val menu = getOptionMenuData()
+        if (coui) {
+            CouiHomeScreen(title, menu, forumBoardViewModel, entries, footer, onAccountClick)
+        } else {
+            MiuixHomeScreen(title, menu, forumBoardViewModel, entries, footer, onAccountClick)
+        }
     }
 
     private fun getTopAppBarData(navigationIconAction: (() -> Unit)? = null): TopAppBarData {

@@ -64,6 +64,11 @@ public class PostActivity extends BaseActivity {
         return isMiuixStyle();
     }
 
+    @Override
+    public boolean isCouiPage() {
+        return isCouiStyle();
+    }
+
     /**
      * The classic toolbar carries an account spinner. The Miuix top app bar has no slot for it,
      * so the same choice is offered as an options-menu entry while more than one account exists.
@@ -71,7 +76,7 @@ public class PostActivity extends BaseActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         boolean created = super.onCreateOptionsMenu(menu);
-        if (isMiuixPage() && UserManagerImpl.getInstance().getUserList().size() > 1) {
+        if ((isMiuixPage() || isCouiPage()) && UserManagerImpl.getInstance().getUserList().size() > 1) {
             menu.add(Menu.NONE, R.id.miuix_menu_switch_account, Menu.CATEGORY_SECONDARY, R.string.miuix_switch_account);
             created = true;
         }

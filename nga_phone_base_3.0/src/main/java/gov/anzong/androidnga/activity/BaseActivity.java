@@ -33,6 +33,7 @@ import com.justwen.androidnga.ui.compose.miuix.PredictiveBack;
 import com.justwen.androidnga.ui.compose.miuix.MiuixViewShellKt;
 
 import gov.anzong.androidnga.R;
+import gov.anzong.androidnga.ui.coui.CouiViewShellKt;
 import gov.anzong.androidnga.base.common.SwipeBackHelper;
 import gov.anzong.androidnga.base.util.ContextUtils;
 import gov.anzong.androidnga.base.util.DeviceUtils;
@@ -182,12 +183,15 @@ public abstract class BaseActivity extends AppCompatActivity implements MiuixChr
      */
     protected void setClassicOrMiuixContentView(int layoutId, int contentId) {
         View classic = getLayoutInflater().inflate(layoutId, null);
-        if (!isMiuixPage()) {
+        if (!usesComposeChrome()) {
             setContentView(classic);
             return;
         }
         View content = classic.findViewById(contentId);
-        setContentView(MiuixViewShellKt.miuixViewShell(this, classic, content != null ? content : classic));
+        View body = content != null ? content : classic;
+        setContentView(isCouiPage()
+                ? CouiViewShellKt.couiViewShell(this, classic, body)
+                : MiuixViewShellKt.miuixViewShell(this, classic, body));
     }
 
     /**

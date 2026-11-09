@@ -2,6 +2,7 @@ package gov.anzong.androidnga.ui.coui
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -52,6 +53,7 @@ internal fun CouiPreferencePage(
     dark: Boolean,
     screen: PreferenceGroup?,
     revision: Int,
+    actions: @Composable RowScope.() -> Unit,
     onBack: () -> Unit,
     onClick: (Preference) -> Unit,
 ) {
@@ -63,6 +65,7 @@ internal fun CouiPreferencePage(
             topBar = {
                 TopAppBar(
                     title = { Text(text = title, kind = CouiTextKind.Toolbar) },
+                    actions = actions,
                     navigationIcon = {
                         TopAppBarButton(onClick = onBack) {
                             Icon(

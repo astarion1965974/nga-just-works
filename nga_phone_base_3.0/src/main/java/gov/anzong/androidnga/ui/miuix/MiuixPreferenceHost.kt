@@ -18,6 +18,7 @@ import com.justwen.androidnga.ui.compose.miuix.MiuixChromeOwner
 import com.justwen.androidnga.ui.compose.miuix.NgaMiuixTheme
 import com.justwen.androidnga.ui.compose.miuix.rememberHostOptionsMenu
 import gov.anzong.androidnga.ui.coui.CouiPreferencePage
+import gov.anzong.androidnga.ui.coui.CouiForumMenu
 import sp.phone.theme.ThemeManager
 
 /**
@@ -65,6 +66,7 @@ internal class MiuixPreferenceHost(
                         dark = ThemeManager.getInstance().isNightMode(),
                         screen = fragment.preferenceScreen,
                         revision = revision,
+                        actions = { if (activity != null) CouiForumMenu(activity) },
                         onBack = { activity?.onBackPressedDispatcher?.onBackPressed() },
                         onClick = Preference::performClickCompat,
                     )

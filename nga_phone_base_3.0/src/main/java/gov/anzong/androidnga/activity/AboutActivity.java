@@ -15,6 +15,7 @@ import com.danielstone.materialaboutlibrary.MaterialAboutActivity;
 import com.justwen.androidnga.ui.compose.miuix.MiuixTransitions;
 import com.justwen.androidnga.ui.compose.miuix.PredictiveBack;
 import gov.anzong.androidnga.ui.miuix.MiuixAboutPage;
+import gov.anzong.androidnga.ui.coui.CouiAboutPage;
 import com.danielstone.materialaboutlibrary.items.MaterialAboutActionItem;
 import com.danielstone.materialaboutlibrary.items.MaterialAboutItemOnClickAction;
 import com.danielstone.materialaboutlibrary.model.MaterialAboutCard;
@@ -37,13 +38,19 @@ public class AboutActivity extends MaterialAboutActivity {
 
     /** Appearance this screen was created with. */
     private boolean mMiuixStyle;
+    private boolean mCouiStyle;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         mMiuixStyle = ThemeManager.getInstance().isMiuixStyle();
+        mCouiStyle = ThemeManager.getInstance().isCouiStyle();
         ThemeManager.getInstance().applyAboutTheme(this);
         super.onCreate(savedInstanceState);
         PredictiveBack.install(this);
+        if (mCouiStyle) {
+            CouiAboutPage.show(this, getActivityTitle(), getMaterialAboutList(this));
+            return;
+        }
         if (mMiuixStyle) {
             MiuixTransitions.apply(this);
             // Same MaterialAboutList, rendered with Miuix cards.
@@ -56,7 +63,8 @@ public class AboutActivity extends MaterialAboutActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (!isFinishing() && mMiuixStyle != ThemeManager.getInstance().isMiuixStyle()) {
+        ThemeManager theme = ThemeManager.getInstance();
+        if (!isFinishing() && (mMiuixStyle != theme.isMiuixStyle() || mCouiStyle != theme.isCouiStyle())) {
             recreate();
         }
     }

@@ -1,10 +1,13 @@
 name: Verify ColorOS 17 Build
 
 on:
+  workflow_dispatch:
   push:
     branches: [coui-preview]
     paths:
       - .github/workflows/coui-preview.yml
+      - build.gradle
+      - nga_phone_base_3.0/build.gradle
       - 'nga_phone_base_3.0/src/main/**'
       - 'lib_base_ui_compose/src/main/**'
 
@@ -17,7 +20,7 @@ permissions:
 
 jobs:
   build:
-    if: ${{ github.repository == 'astarion1965974/nga-just-works' }}
+    if: ${{ github.repository == 'astarion1965974/nga-just-works' && github.ref == 'refs/heads/coui-preview' }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -33,40 +36,73 @@ jobs:
           packages: platform-tools
       - name: Install Android 17 SDK
         run: sdkmanager 'platforms;android-37.0' 'build-tools;37.0.0'
-      - name: Build signed ARM64 preview
+      - name: Detect fixed signing configuration
+        id: signing
+        env:
+          KEYSTORE: ${{ secrets.NGA_COUI_KEYSTORE_B64 }}
+          PASSWORD: ${{ secrets.NGA_COUI_KEYSTORE_PASSWORD }}
+          FINGERPRINT: ${{ vars.NGA_COUI_CERT_SHA256 }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$KEYSTORE" && -z "$PASSWORD" && -z "$FINGERPRINT" ]]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Fixed signing is unconfigured. This run checks compilation only."
+          elif [[ -n "$KEYSTORE" && -n "$PASSWORD" && "$FINGERPRINT" =~ ^[0-9a-f]{64}$ ]]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Fixed signing is partially configured or the SHA-256 fingerprint is invalid."
+            exit 1
+          fi
+      - name: Compile without producing an installable APK
+        if: steps.signing.outputs.ready == 'false'
+        run: |
+          ./gradlew :nga_phone_base_3.0:compileReleaseKotlin :nga_phone_base_3.0:compileReleaseJavaWithJavac \
+            --no-daemon --console=plain --max-workers=3
+      - name: Build with the fixed ARM64 signing key
+        if: steps.signing.outputs.ready == 'true'
+        env:
+          KEYSTORE: ${{ secrets.NGA_COUI_KEYSTORE_B64 }}
+          ANDROID_SIGNING_STORE_PASSWORD: ${{ secrets.NGA_COUI_KEYSTORE_PASSWORD }}
+          FINGERPRINT: ${{ vars.NGA_COUI_CERT_SHA256 }}
         shell: bash
         run: |
           set -euo pipefail
           umask 077
-          export ANDROID_SIGNING_STORE_FILE="$RUNNER_TEMP/nga-coloros-preview.p12"
-          export ANDROID_SIGNING_STORE_PASSWORD="$(openssl rand -hex 32)"
+          export ANDROID_SIGNING_STORE_FILE="$RUNNER_TEMP/nga-coloros-release.p12"
           export ANDROID_SIGNING_KEY_ALIAS=nga-coloros
           export ANDROID_SIGNING_KEY_PASSWORD="$ANDROID_SIGNING_STORE_PASSWORD"
-          echo "::add-mask::$ANDROID_SIGNING_STORE_PASSWORD"
-          keytool -genkeypair -alias "$ANDROID_SIGNING_KEY_ALIAS" -keyalg RSA -keysize 3072 -validity 10000 \
-            -storetype PKCS12 -keystore "$ANDROID_SIGNING_STORE_FILE" \
-            -storepass:env ANDROID_SIGNING_STORE_PASSWORD -dname 'CN=NGA Just Works ColorOS Preview'
+          trap 'rm -f "$ANDROID_SIGNING_STORE_FILE"' EXIT
+          printf '%s' "$KEYSTORE" | base64 --decode > "$ANDROID_SIGNING_STORE_FILE"
+          actual="$(keytool -J-Duser.language=en -J-Duser.country=US -list -v -storetype PKCS12 \
+            -keystore "$ANDROID_SIGNING_STORE_FILE" -storepass:env ANDROID_SIGNING_STORE_PASSWORD \
+            -alias "$ANDROID_SIGNING_KEY_ALIAS" | awk '/SHA256:/{print $2; exit}' | tr -d ':' | tr '[:upper:]' '[:lower:]')"
+          test "$actual" = "$FINGERPRINT"
           ./gradlew :nga_phone_base_3.0:assembleRelease -x :nga_phone_base_3.0:lintVitalRelease \
             --no-daemon --console=plain --max-workers=3
       - name: Verify release package
+        if: steps.signing.outputs.ready == 'true'
+        env:
+          FINGERPRINT: ${{ vars.NGA_COUI_CERT_SHA256 }}
         shell: bash
         run: |
           set -euo pipefail
           src_dir=nga_phone_base_3.0/build/outputs/apk/release
           test "$(find "$src_dir" -maxdepth 1 -type f -name '*.apk' ! -name '*unsigned*' | wc -l)" = 1
-          apk=NGA-Just-Works-COUI-build-$GITHUB_RUN_NUMBER-arm64.apk
+          apk=NGA-Just-Works-COUI-4.5.2-arm64.apk
           mkdir -p dist
           cp "$(find "$src_dir" -maxdepth 1 -type f -name '*.apk' ! -name '*unsigned*' -print -quit)" "dist/$apk"
           tools="$ANDROID_HOME/build-tools/37.0.0"
           "$tools/aapt" dump badging "dist/$apk" > "$RUNNER_TEMP/nga-apk-info"
-          grep -F "package: name='com.astarion.ngajustworks.coui' versionCode='4051' versionName='4.5.1'" "$RUNNER_TEMP/nga-apk-info"
+          grep -F "package: name='com.astarion.ngajustworks.coui' versionCode='4052' versionName='4.5.2'" "$RUNNER_TEMP/nga-apk-info"
           grep -Fx "sdkVersion:'37'" "$RUNNER_TEMP/nga-apk-info"
           grep -Fx "targetSdkVersion:'37'" "$RUNNER_TEMP/nga-apk-info"
           grep -Fx "native-code: 'arm64-v8a'" "$RUNNER_TEMP/nga-apk-info"
           if grep -q '^application-debuggable' "$RUNNER_TEMP/nga-apk-info"; then exit 1; fi
-          "$tools/apksigner" verify --verbose --print-certs "dist/$apk"
+          "$tools/apksigner" verify --verbose --print-certs "dist/$apk" | tee "$RUNNER_TEMP/nga-apk-certificate"
+          grep -F "certificate SHA-256 digest: $FINGERPRINT" "$RUNNER_TEMP/nga-apk-certificate"
           (cd dist && sha256sum "$apk" > "$apk.sha256" && sha256sum -c "$apk.sha256")
       - uses: actions/upload-artifact@v4
+        if: steps.signing.outputs.ready == 'true'
         with:
           name: nga-coloros17-arm64
           path: dist/

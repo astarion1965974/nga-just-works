@@ -20,6 +20,7 @@ import java.util.List;
 import gov.anzong.androidnga.R;
 import gov.anzong.androidnga.base.widget.SeekBarEx;
 import sp.phone.common.Constants;
+import gov.anzong.androidnga.ui.coui.CouiForumPageKt;
 import gov.anzong.androidnga.ui.miuix.MiuixSizeItem;
 import gov.anzong.androidnga.ui.miuix.MiuixSizeSettingsPageKt;
 import kotlin.Unit;
@@ -35,7 +36,7 @@ public class SettingsSizeFragment extends BaseFragment implements  SignSeekBar.O
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_settings_size, container, false);
         initView(rootView);
-        if (MiuixChromeKt.isMiuixHost(getActivity())) {
+        if (MiuixChromeKt.isMiuixHost(getActivity()) || CouiForumPageKt.isCouiForumHost(getActivity())) {
             return createMiuixView();
         }
         return rootView;

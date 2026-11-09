@@ -12,6 +12,7 @@ import gov.anzong.androidnga.R;
 import gov.anzong.androidnga.ui.fragment.BasePreferenceFragment;
 import sp.phone.ui.fragment.BaseFragment;
 import sp.phone.ui.fragment.TopicHistoryFragment;
+import sp.phone.ui.fragment.SettingsSizeFragment;
 import sp.phone.ui.fragment.TopicSearchFragment;
 
 public class LauncherSubActivity extends BaseActivity {
@@ -69,7 +70,9 @@ public class LauncherSubActivity extends BaseActivity {
     public boolean isCouiPage() {
         return isCouiStyle() && mFragmentClass != null
                 && (TopicHistoryFragment.class.isAssignableFrom(mFragmentClass)
-                || TopicSearchFragment.class.isAssignableFrom(mFragmentClass));
+                || TopicSearchFragment.class.isAssignableFrom(mFragmentClass)
+                || BasePreferenceFragment.class.isAssignableFrom(mFragmentClass)
+                || SettingsSizeFragment.class.isAssignableFrom(mFragmentClass));
     }
 
     private boolean isFullMiuixFragment() {
