@@ -198,10 +198,9 @@ internal fun CouiForumPage(
 }
 
 /**
- * The page FAB wired like the coui-kit demo (FabSampleButton / docs/components/fab.md): 24dp from the
- * Scaffold slot's bottom-end corner, material and shadow built from the same colour, and its glow
- * composited as a transparent foreground over what is actually drawn beneath it instead of a
- * rectangle back-filled from the page backdrop, which left the halo looking offset from the button.
+ * Use a standalone COUI FAB over the page without back-filling the View/WebView
+ * backdrop. Attenuate the caustic halo to keep the blue fringe below the button
+ * subtle on light post cards while retaining the native contour and shadow.
  */
 @Composable
 internal fun BoxScope.CouiPageFab(
@@ -211,13 +210,19 @@ internal fun BoxScope.CouiPageFab(
 ) {
     val dark = CouiTheme.isDark
     val color = CouiTheme.colorScheme.accent
+    val defaultShadow = CouiFabDefaults.shadow(
+        color, LocalDensity.current.density, LocalCouiContourGlowEnabled.current,
+    )
+    val pageShadow = defaultShadow.copy(
+        causticColor = defaultShadow.causticColor.copy(alpha = defaultShadow.causticColor.alpha * 0.35f),
+    )
     Fab(
         modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp).then(modifier),
         renderer = remember { CouiFloatingRenderer.standalone() },
         onClick = onClick,
         dark = dark,
         material = CouiFabDefaults.material(color, dark),
-        shadow = CouiFabDefaults.shadow(color, LocalDensity.current.density, LocalCouiContourGlowEnabled.current),
+        shadow = pageShadow,
         foregroundComposition = true,
     ) {
         Icon(Icons.Default.Edit, description, Modifier.size(24.dp), tint = Color.White)
