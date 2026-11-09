@@ -21,6 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.itos.coui.backdrop.CouiBackdrop
@@ -36,6 +37,7 @@ import com.itos.coui.text.Text
 import com.itos.coui.theme.CouiTheme
 import com.itos.coui.theme.LocalCouiContentColor
 import com.itos.coui.topappbar.TopAppBar
+import com.itos.coui.topappbar.CouiTopAppBarDefaults
 import com.itos.coui.topappbar.TopAppBarButton
 import com.justwen.androidnga.ui.compose.miuix.MiuixChromeOwner
 import com.justwen.androidnga.ui.compose.miuix.performHostMenuItem
@@ -84,6 +86,7 @@ internal fun CouiForumPage(
                     Column {
                         TopAppBar(
                             backdrop = backdrop,
+                            colors = CouiTopAppBarDefaults.colors(backgroundColor = Color.Transparent),
                             title = {
                                 Text(
                                     text = title,

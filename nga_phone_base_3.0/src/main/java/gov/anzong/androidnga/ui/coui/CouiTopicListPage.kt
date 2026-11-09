@@ -95,9 +95,9 @@ internal fun CouiTopicListPage(activity: Activity, state: MiuixTopicListState, c
                         CircularProgressIndicator(color = colors.accent)
                     } else {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(text = state.emptyText, color = colors.onSurfaceVariant)
+                            Text(text = state.emptyText, kind = CouiTextKind.Body, color = colors.onSurfaceVariant)
                             callbacks.onRefresh?.let { refresh ->
-                                Item(onClick = refresh, title = { Text(text = "重试", color = colors.accent) })
+                                Item(onClick = refresh, title = { Text(text = "重试", kind = CouiTextKind.PreferenceTitle, color = colors.accent) })
                             }
                         }
                     }
@@ -168,7 +168,7 @@ private fun TopicRow(row: MiuixTopicRow, titleSize: Float, onClick: () -> Unit, 
             overflow = TextOverflow.Ellipsis,
         )
         row.summary?.let {
-            Text(text = it, color = colors.onSurfaceVariant, maxLines = 3, overflow = TextOverflow.Ellipsis)
+            Text(text = it, kind = CouiTextKind.Description, color = colors.onSurfaceVariant, maxLines = 3, overflow = TextOverflow.Ellipsis)
         }
         val details = listOfNotNull(row.people.takeIf { it.isNotEmpty() }, row.replies).joinToString("  ")
         if (details.isNotEmpty()) {

@@ -35,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
@@ -85,7 +86,7 @@ internal fun CouiSearchPage(viewModel: SearchViewModel, onBack: () -> Unit, onSe
             topBar = {
                 CouiSolidHeader { backdrop ->
                     Column {
-                        TopAppBarSurface(backdrop = backdrop) {
+                        TopAppBarSurface(backdrop = backdrop, gradientColor = Color.Transparent) {
                             Row(
                                 modifier = Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 12.dp, vertical = 4.dp),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -193,7 +194,7 @@ private fun SearchHistory(
     Group(
         title = "搜索历史",
         headerActions = {
-            Text(text = "全部清除", color = colors.accent, modifier = Modifier.clickable(onClick = onClear).padding(8.dp))
+            Text(text = "全部清除", kind = CouiTextKind.Description, color = colors.accent, modifier = Modifier.clickable(onClick = onClear).padding(8.dp))
         },
     ) {
         FlowRow(
@@ -208,6 +209,7 @@ private fun SearchHistory(
                 ) {
                     Text(
                         text = term,
+                        kind = CouiTextKind.Body,
                         modifier = Modifier.weight(1f, fill = false).clickable { onSearch(term) }.padding(12.dp),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
