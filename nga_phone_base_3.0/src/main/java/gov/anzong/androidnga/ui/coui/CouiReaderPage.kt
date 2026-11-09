@@ -35,6 +35,7 @@ import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalDensity
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import gov.anzong.androidnga.R
 import androidx.compose.ui.viewinterop.AndroidView
@@ -79,8 +80,18 @@ internal fun CouiReaderPage(activity: Activity, content: View, tabs: MiuixReader
                     if (view is RecyclerView && view.id == R.id.list) {
                         val base = originalPadding.getOrPut(view) { view.paddingTop }
                         if (view.paddingTop != base + top) {
+                            // LinearLayoutManager keeps already laid-out rows at their absolute position when
+                            // padding changes, so a list laid out before this inset left floor 1 under the bar.
+                            // Re-anchor the first visible row relative to the new padding; this keeps both the
+                            // default "open at floor 1" position and pid/notification anchor jumps intact.
+                            val layout = view.layoutManager as? LinearLayoutManager
+                            val first = layout?.findFirstVisibleItemPosition() ?: RecyclerView.NO_POSITION
+                            val offset = if (first == RecyclerView.NO_POSITION) null else {
+                                layout?.findViewByPosition(first)?.let { layout.getDecoratedTop(it) - view.paddingTop }
+                            }
                             view.setPadding(view.paddingLeft, base + top, view.paddingRight, view.paddingBottom)
                             view.clipToPadding = false
+                            if (layout != null && offset != null) layout.scrollToPositionWithOffset(first, offset)
                         }
                     }
                     if (view is ViewGroup) {

@@ -1,6 +1,5 @@
 package gov.anzong.androidnga.activity.compose
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -58,6 +56,7 @@ import com.itos.coui.theme.CouiTheme
 import com.itos.coui.topappbar.TopAppBarSurface
 import gov.anzong.androidnga.ui.coui.CouiBackButton
 import gov.anzong.androidnga.ui.coui.CouiSolidHeader
+import gov.anzong.androidnga.ui.coui.CouiTopBarRow
 import sp.phone.theme.ThemeManager
 
 @Composable
@@ -66,8 +65,9 @@ internal fun CouiSearchPage(viewModel: SearchViewModel, onBack: () -> Unit, onSe
     val history by viewModel.keyList.observeAsState(emptyList())
     val scopes = remember(viewModel) { viewModel.searchData.map { (label, key) -> CouiChipTabItem(key, label) } }
     var query by rememberSaveable { mutableStateOf("") }
-    var expanded by rememberSaveable { mutableStateOf(true) }
-    val search = rememberCouiSearchBarState(expanded)
+    // The search field stays expanded for the whole page: back (gesture or button) and "取消" leave the
+    // page directly instead of first collapsing the field with its stretch/fade spring animation.
+    val search = rememberCouiSearchBarState(true)
     val keyboard = LocalSoftwareKeyboardController.current
     val submit: (String) -> Unit = { text ->
         if (text.isNotBlank()) {
@@ -75,11 +75,7 @@ internal fun CouiSearchPage(viewModel: SearchViewModel, onBack: () -> Unit, onSe
             onSearch(text)
         }
     }
-    val setExpanded: (Boolean) -> Unit = { open ->
-        expanded = open
-        if (!open) query = ""
-    }
-    BackHandler(enabled = expanded) { setExpanded(false) }
+    val setExpanded: (Boolean) -> Unit = { open -> if (!open) onBack() }
     CouiTheme(darkTheme = ThemeManager.getInstance().isNightMode) {
         Scaffold(
             modifier = Modifier.fillMaxSize().imePadding(),
@@ -87,12 +83,7 @@ internal fun CouiSearchPage(viewModel: SearchViewModel, onBack: () -> Unit, onSe
                 CouiSolidHeader { backdrop ->
                     Column {
                         TopAppBarSurface(backdrop = backdrop, gradientColor = Color.Transparent) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 12.dp, vertical = 4.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                CouiBackButton(onBack)
+                            CouiTopBarRow(navigationIcon = { CouiBackButton(onBack) }) {
                                 SearchBar(
                                     modifier = Modifier.weight(1f),
                                     state = search,
@@ -107,7 +98,7 @@ internal fun CouiSearchPage(viewModel: SearchViewModel, onBack: () -> Unit, onSe
                             }
                         }
                         ChipTabRow(
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                            modifier = Modifier.fillMaxWidth(),
                             items = scopes,
                             selectedKey = mode,
                             onSelectedKeyChange = { viewModel.searchMode.value = it as Int },

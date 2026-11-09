@@ -9,9 +9,12 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
@@ -65,6 +68,36 @@ internal fun CouiSolidHeader(content: @Composable (CouiBackdrop) -> Unit) {
     }
 }
 
+private val CouiTopBarSidePadding = 12.dp
+private val CouiTopBarGap = 8.dp
+
+/**
+ * Custom top-bar row with the same insets, height, side padding and gaps as COUI [TopAppBar],
+ * so navigation and action buttons stay in place when switching between COUI pages.
+ */
+@Composable
+internal fun CouiTopBarRow(
+    navigationIcon: @Composable () -> Unit,
+    actions: (@Composable RowScope.() -> Unit)? = null,
+    content: @Composable RowScope.() -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth()
+            .windowInsetsPadding(CouiTopAppBarDefaults.windowInsets)
+            .height(CouiTopAppBarDefaults.height)
+            .padding(horizontal = CouiTopBarSidePadding),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        navigationIcon()
+        Spacer(Modifier.width(CouiTopBarGap))
+        content()
+        if (actions != null) {
+            Spacer(Modifier.width(CouiTopBarGap))
+            actions()
+        }
+    }
+}
+
 @Composable
 internal fun CouiBackButton(onBack: () -> Unit) {
     TopAppBarButton(onClick = onBack) {
@@ -93,27 +126,26 @@ internal fun CouiForumPage(
             topBar = {
                 if (progressiveHeader) {
                     val chipBackdrop = rememberCouiBackdrop()
-                    TopAppBarSurface(bottomExtension = 24.dp) {
+                    TopAppBarSurface {
                         Column {
-                            Row(
-                                modifier = Modifier.fillMaxWidth().statusBarsPadding().height(52.dp)
-                                    .padding(horizontal = 16.dp),
-                                verticalAlignment = Alignment.CenterVertically,
+                            CouiTopBarRow(
+                                navigationIcon = {
+                                    CouiBackButton {
+                                        (activity as? ComponentActivity)?.onBackPressedDispatcher?.onBackPressed()
+                                            ?: activity.finish()
+                                    }
+                                },
+                                actions = { CouiForumMenu(activity) },
                             ) {
-                                CouiBackButton {
-                                    (activity as? ComponentActivity)?.onBackPressedDispatcher?.onBackPressed()
-                                        ?: activity.finish()
-                                }
                                 Text(
                                     text = title,
                                     kind = CouiTextKind.Toolbar,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(1f).padding(start = 12.dp).then(
+                                    modifier = Modifier.weight(1f).then(
                                         if (onTitleClick == null) Modifier else Modifier.clickable(onClick = onTitleClick),
                                     ),
                                 )
-                                CouiForumMenu(activity)
                             }
                             if (extraTopBar != null) {
                                 Box {
