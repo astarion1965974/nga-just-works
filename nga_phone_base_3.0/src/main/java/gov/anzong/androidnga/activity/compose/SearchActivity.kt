@@ -63,6 +63,7 @@ import com.alibaba.android.arouter.facade.annotation.Route
 import com.justwen.androidnga.ui.compose.BaseComposeActivity
 import com.justwen.androidnga.ui.compose.widget.TopAppBarData
 import gov.anzong.androidnga.arouter.ARouterConstants
+import sp.phone.theme.ThemeManager
 
 @Route(path = ARouterConstants.ACTIVITY_SEARCH)
 class SearchActivity : BaseComposeActivity() {
@@ -74,15 +75,17 @@ class SearchActivity : BaseComposeActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         viewModel.fid = intent.getIntExtra("fid", 0)
         super.onCreate(savedInstanceState)
-        if (isMiuixStyle) {
-            // The search field lives in the top bar, so the page owns its whole Scaffold.
-            setContent {
-                MiuixSearchPage(
-                    viewModel = viewModel,
-                    onBack = ::finish,
-                    onSearch = { viewModel.query(this, it) },
-                )
+    }
+
+    override fun buildContentView() {
+        when {
+            ThemeManager.getInstance().isCouiStyle -> setContent {
+                CouiSearchPage(viewModel, ::finish) { viewModel.query(this, it) }
             }
+            isMiuixStyle -> setContent {
+                MiuixSearchPage(viewModel, ::finish) { viewModel.query(this, it) }
+            }
+            else -> super.buildContentView()
         }
     }
 

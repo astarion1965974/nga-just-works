@@ -65,6 +65,8 @@ import com.justwen.androidnga.ui.compose.miuix.NgaMiuixIcons
 import com.justwen.androidnga.ui.compose.miuix.NgaMiuixTheme
 import com.justwen.androidnga.ui.compose.miuix.miuixListPadding
 import com.justwen.androidnga.ui.compose.miuix.rememberHostOptionsMenu
+import gov.anzong.androidnga.ui.coui.CouiTopicListPage
+import gov.anzong.androidnga.ui.coui.isCouiForumHost
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
@@ -164,7 +166,9 @@ fun miuixTopicListView(
     val compose = ComposeView(activity).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         setContent {
-            NgaMiuixTheme {
+            if (isCouiForumHost(activity)) {
+                CouiTopicListPage(activity, state, callbacks)
+            } else NgaMiuixTheme {
                 MiuixTopicListPage(activity, state, callbacks)
             }
         }

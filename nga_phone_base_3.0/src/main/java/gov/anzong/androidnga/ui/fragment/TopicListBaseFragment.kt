@@ -12,6 +12,7 @@ import gov.anzong.androidnga.base.util.ToastUtils
 import com.justwen.androidnga.ui.compose.miuix.MiuixFragment
 import com.justwen.androidnga.ui.compose.miuix.isMiuixHost
 import gov.anzong.androidnga.base.widget.DividerItemDecorationEx
+import gov.anzong.androidnga.ui.coui.isCouiForumHost
 import gov.anzong.androidnga.ui.miuix.MiuixTopicListBridge
 import gov.anzong.androidnga.ui.miuix.MiuixTopicListHost
 import sp.phone.mvp.model.entity.ThreadPageInfo
@@ -91,7 +92,7 @@ open class TopicListBaseFragment : BaseFragment(R.layout.fragment_topic_list_bas
      * stay (hidden) and keep the adapter, paging and observers.
      */
     protected fun wrapMiuix(classicView: View): View {
-        if (!isMiuixHost(activity)) {
+        if (!isMiuixHost(activity) && !isCouiForumHost(activity)) {
             return classicView
         }
         return MiuixTopicListBridge(this, this, isReplyList).also { mMiuix = it }.wrap(classicView)

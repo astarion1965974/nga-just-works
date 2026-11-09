@@ -125,6 +125,11 @@ public class ArticleListActivity extends BaseActivity {
     }
 
     @Override
+    public boolean isCouiPage() {
+        return isCouiStyle();
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         Fragment fragment = getSupportFragmentManager().findFragmentById(android.R.id.content);
         if (fragment != null) fragment.onActivityResult(requestCode, resultCode, data);

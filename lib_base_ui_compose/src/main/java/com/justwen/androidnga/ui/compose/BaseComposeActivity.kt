@@ -50,7 +50,7 @@ abstract class BaseComposeActivity : FragmentActivity(), MiuixChromeOwner {
         }
     }
 
-    fun buildContentView() {
+    open fun buildContentView() {
         if (isMiuixStyle) {
             setContent {
                 NgaMiuixTheme {

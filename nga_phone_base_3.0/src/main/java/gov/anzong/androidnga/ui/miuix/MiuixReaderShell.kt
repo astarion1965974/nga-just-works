@@ -34,6 +34,8 @@ import com.justwen.androidnga.ui.compose.miuix.MiuixNavIcon
 import com.justwen.androidnga.ui.compose.miuix.MiuixPage
 import com.justwen.androidnga.ui.compose.miuix.NgaMiuixTheme
 import com.justwen.androidnga.ui.compose.miuix.rememberHostOptionsMenu
+import gov.anzong.androidnga.ui.coui.CouiReaderPage
+import gov.anzong.androidnga.ui.coui.isCouiForumHost
 import kotlinx.coroutines.delay
 import top.yukonga.miuix.kmp.basic.FloatingActionButtonDefaults
 import top.yukonga.miuix.kmp.basic.Surface
@@ -85,7 +87,9 @@ fun miuixReaderShell(
     val compose = ComposeView(activity).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         setContent {
-            NgaMiuixTheme {
+            if (isCouiForumHost(activity)) {
+                CouiReaderPage(activity, content, tabs, callbacks)
+            } else NgaMiuixTheme {
                 MiuixReaderPage(activity, content, tabs, callbacks)
             }
         }

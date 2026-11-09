@@ -110,6 +110,11 @@ public class TopicListActivity extends BaseActivity {
         return isMiuixStyle();
     }
 
+    @Override
+    public boolean isCouiPage() {
+        return isCouiStyle();
+    }
+
     private boolean isBoardTopicList() {
         return mRequestParam.recommend == 0
                 && mRequestParam.twentyfour == 0

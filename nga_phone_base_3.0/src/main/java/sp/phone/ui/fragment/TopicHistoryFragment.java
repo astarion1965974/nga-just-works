@@ -22,6 +22,7 @@ import com.justwen.androidnga.ui.compose.miuix.MiuixFragment;
 import java.util.List;
 
 import gov.anzong.androidnga.R;
+import gov.anzong.androidnga.ui.coui.CouiForumPageKt;
 import gov.anzong.androidnga.base.util.ContextUtils;
 import gov.anzong.androidnga.base.widget.DividerItemDecorationEx;
 import gov.anzong.androidnga.common.ui.dialog.ConfirmDialog;
@@ -64,7 +65,7 @@ public class TopicHistoryFragment extends BaseFragment implements View.OnClickLi
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View classic = inflater.inflate(R.layout.fragment_settings_user, container, false);
-        if (!MiuixChromeKt.isMiuixHost(getActivity())) {
+        if (!MiuixChromeKt.isMiuixHost(getActivity()) && !CouiForumPageKt.isCouiForumHost(getActivity())) {
             return classic;
         }
         mMiuix = new MiuixTopicListBridge(this, this, false);

@@ -68,11 +68,13 @@ public abstract class BaseActivity extends AppCompatActivity implements MiuixChr
     private final MiuixChromeState mMiuixChrome = new MiuixChromeState();
 
     private boolean mMiuixStyle;
+    private boolean mCouiStyle;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         mConfig = PhoneConfiguration.getInstance();
         mMiuixStyle = ThemeManager.getInstance().isMiuixStyle();
+        mCouiStyle = ThemeManager.getInstance().isCouiStyle();
         updateThemeUi();
         super.onCreate(savedInstanceState);
         // First back callback, so page-specific callbacks added later still run before it.
@@ -204,7 +206,7 @@ public abstract class BaseActivity extends AppCompatActivity implements MiuixChr
 
     private void enableEdge2Edge() {
         View contentView = findViewById(android.R.id.content);
-        if (mToolbarEnabled && !mComposeEnabled && !isMiuixPage() && contentView != null) {
+        if (mToolbarEnabled && !mComposeEnabled && !usesComposeChrome() && contentView != null) {
             final int initialPaddingLeft = contentView.getPaddingLeft();
             final int initialPaddingTop = contentView.getPaddingTop();
             final int initialPaddingRight = contentView.getPaddingRight();
@@ -269,9 +271,8 @@ public abstract class BaseActivity extends AppCompatActivity implements MiuixChr
     }
 
     public void setupToolbar(Toolbar toolbar) {
-        // Miuix pages draw their own top app bar from MiuixChromeState; the classic toolbar is
-        // only kept (hidden) for view bindings and must not become the ActionBar.
-        if (isMiuixPage()) {
+        // Compose pages draw their own app bar; the legacy toolbar only serves view bindings.
+        if (usesComposeChrome()) {
             return;
         }
         if (toolbar != null && getSupportActionBar() == null) {
@@ -354,7 +355,7 @@ public abstract class BaseActivity extends AppCompatActivity implements MiuixChr
     @Override
     public void setContentView(View view) {
         super.setContentView(view);
-        view.setFitsSystemWindows(!mToolbarEnabled && !isMiuixPage());
+        view.setFitsSystemWindows(!mToolbarEnabled && !usesComposeChrome());
     }
 
     /** Whether this Activity was created with the Miuix appearance. */
@@ -369,6 +370,18 @@ public abstract class BaseActivity extends AppCompatActivity implements MiuixChr
      */
     protected boolean isMiuixPage() {
         return false;
+    }
+
+    public boolean isCouiPage() {
+        return false;
+    }
+
+    protected final boolean isCouiStyle() {
+        return mCouiStyle;
+    }
+
+    private boolean usesComposeChrome() {
+        return isMiuixPage() || isCouiPage();
     }
 
     @NonNull
@@ -395,7 +408,9 @@ public abstract class BaseActivity extends AppCompatActivity implements MiuixChr
         NotificationController.getInstance().checkNotificationDelay();
         super.onResume();
         // 外观在别的页面被切换时，返回栈里的页面回到前台再按新外观重建。
-        if (!isFinishing() && mMiuixStyle != ThemeManager.getInstance().isMiuixStyle()) {
+        ThemeManager theme = ThemeManager.getInstance();
+        if (!isFinishing() && (mMiuixStyle != theme.isMiuixStyle()
+                || mCouiStyle != theme.isCouiStyle())) {
             recreate();
         }
     }

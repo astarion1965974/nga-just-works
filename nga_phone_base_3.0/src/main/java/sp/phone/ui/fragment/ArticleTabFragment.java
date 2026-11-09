@@ -36,6 +36,7 @@ import gov.anzong.androidnga.ui.miuix.MiuixReaderTabsState;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import gov.anzong.androidnga.R;
+import gov.anzong.androidnga.ui.coui.CouiForumPageKt;
 import gov.anzong.androidnga.Utils;
 import gov.anzong.androidnga.activity.fragment.ForumWebFragment;
 import gov.anzong.androidnga.base.util.ShareUtils;
@@ -115,7 +116,7 @@ public class ArticleTabFragment extends BaseRxFragment implements MiuixFragment 
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
         View classic = inflater.inflate(R.layout.fragment_article_tab, container, false);
-        if (!MiuixChromeKt.isMiuixHost(getActivity())) {
+        if (!MiuixChromeKt.isMiuixHost(getActivity()) && !CouiForumPageKt.isCouiForumHost(getActivity())) {
             return classic;
         }
         mMiuixTabs = new MiuixReaderTabsState();

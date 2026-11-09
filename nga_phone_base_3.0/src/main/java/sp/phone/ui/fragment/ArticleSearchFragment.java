@@ -13,6 +13,7 @@ import com.justwen.androidnga.ui.compose.miuix.MiuixChromeKt;
 import com.justwen.androidnga.ui.compose.miuix.MiuixFragment;
 
 import gov.anzong.androidnga.R;
+import gov.anzong.androidnga.ui.coui.CouiForumPageKt;
 import gov.anzong.androidnga.ui.miuix.MiuixReaderCallbacks;
 import gov.anzong.androidnga.ui.miuix.MiuixReaderShellKt;
 import gov.anzong.androidnga.ui.miuix.MiuixReaderTabsState;
@@ -30,7 +31,7 @@ public class ArticleSearchFragment extends ArticleListFragment implements MiuixF
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View classic = inflater.inflate(R.layout.fragment_article_list_reply, container, false);
-        if (!MiuixChromeKt.isMiuixHost(getActivity())) {
+        if (!MiuixChromeKt.isMiuixHost(getActivity()) && !CouiForumPageKt.isCouiForumHost(getActivity())) {
             return classic;
         }
         // A single reply page: Miuix top app bar, no page tabs and no reply button.
