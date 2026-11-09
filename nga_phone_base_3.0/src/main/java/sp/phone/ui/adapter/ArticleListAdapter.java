@@ -519,6 +519,11 @@ public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.
         MiuixReaderStyle.setScore(holder.scoreTv, score, animate && mMiuixStyle);
         if (mMiuixStyle) {
             MiuixReaderStyle.bindVoteState(holder.supportBtn, holder.opposeBtn, row.getVoteState(), animate);
+        } else if (mCouiStyle) {
+            boolean hasFloor = ArticleRowPresentation.hasFloor(row);
+            boolean post = ArticleRowPresentation.isPost(row) && !FunctionUtils.isComment(row);
+            boolean addressable = row.getTid() > 0 && (row.getPid() > 0 || hasFloor && row.getLou() == 0);
+            MiuixReaderStyle.bindCouiVote(holder.itemView, row.getVoteState(), post && addressable, scoreKnown);
         }
     }
 
@@ -548,22 +553,29 @@ public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.
 
         int fgColor = mThemeManager.getAccentColor(mContext);
         FunctionUtils.handleNickName(row, fgColor, holder.nickNameTV, mTopicOwner, mContext);
+        if (mCouiStyle) MiuixReaderStyle.styleCouiOwnerBadge(holder.nickNameTV);
 
         boolean hasFloor = ArticleRowPresentation.hasFloor(row);
         holder.floorTv.setVisibility(hasFloor ? View.VISIBLE : View.GONE);
         holder.floorTv.setText(hasFloor ? MessageFormat.format("[{0} 楼]", String.valueOf(row.getLou())) : "");
         holder.postTimeTv.setText(row.getPostdate());
+        holder.postTimeTv.setVisibility(mCouiStyle ? View.GONE : View.VISIBLE);
         onBindVote(holder, row, false);
 
         boolean post = ArticleRowPresentation.isPost(row) && !FunctionUtils.isComment(row);
         boolean addressable = row.getTid() > 0 && (row.getPid() > 0 || hasFloor && row.getLou() == 0);
         holder.supportBtn.setVisibility(post && addressable ? View.VISIBLE : View.GONE);
         holder.opposeBtn.setVisibility(post && addressable ? View.VISIBLE : View.GONE);
-        holder.replyBtn.setVisibility(ArticleRowPresentation.canReply(row) ? View.VISIBLE : View.GONE);
+        boolean canReply = ArticleRowPresentation.canReply(row);
+        holder.replyBtn.setVisibility(canReply ? View.VISIBLE : View.GONE);
+        if (mCouiStyle) {
+            View replyLabel = holder.itemView.findViewWithTag("coui_reply_label");
+            if (replyLabel != null) replyLabel.setVisibility(canReply ? View.VISIBLE : View.GONE);
+        }
         boolean userKnown = ArticleRowPresentation.hasUser(row);
         holder.nickNameTV.setEnabled(userKnown);
         holder.avatarPanel.setEnabled(userKnown);
-        holder.detailTv.setVisibility(userKnown ? View.VISIBLE : View.GONE);
+        holder.detailTv.setVisibility(userKnown || mCouiStyle ? View.VISIBLE : View.GONE);
 
         onBindAuthorDetail(holder, row);
 
@@ -573,9 +585,18 @@ public class ArticleListAdapter extends RecyclerView.Adapter<ArticleListAdapter.
         String location = row.getISANONYMOUS() ? null
                 : mAuthorLocations.location(row.getAuthorid(), System.currentTimeMillis());
         String posts = TextUtils.isEmpty(row.getPostCount()) ? "N/A" : row.getPostCount();
-        String detail = location == null
-                ? mContext.getString(R.string.article_author_posts, posts)
-                : mContext.getString(R.string.article_author_location_posts, location, posts);
+        String detail;
+        if (mCouiStyle) {
+            java.util.ArrayList<String> metadata = new java.util.ArrayList<>();
+            if (!TextUtils.isEmpty(row.getPostdate())) metadata.add(row.getPostdate());
+            if (!TextUtils.isEmpty(location)) metadata.add(location);
+            if (ArticleRowPresentation.hasUser(row)) metadata.add(mContext.getString(R.string.article_author_posts, posts));
+            detail = TextUtils.join(" · ", metadata);
+        } else {
+            detail = location == null
+                    ? mContext.getString(R.string.article_author_posts, posts)
+                    : mContext.getString(R.string.article_author_location_posts, location, posts);
+        }
         // Compare what is drawn: an invalidated snapshot already reads null while old text remains.
         if (!TextUtils.equals(holder.detailTv.getText(), detail)) {
             holder.detailTv.setText(detail);

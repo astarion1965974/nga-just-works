@@ -20,6 +20,11 @@ import android.view.animation.OvershootInterpolator
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.RelativeLayout
+import android.widget.LinearLayout
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.ReplacementSpan
+import android.graphics.Paint
 import android.util.TypedValue
 import sp.phone.theme.ThemeManager
 import androidx.core.content.ContextCompat
@@ -426,7 +431,7 @@ object MiuixReaderStyle {
             (layoutParams as? RelativeLayout.LayoutParams)?.apply {
                 removeRule(RelativeLayout.BELOW)
                 removeRule(RelativeLayout.START_OF)
-                addRule(RelativeLayout.BELOW, R.id.tv_post_time)
+                addRule(RelativeLayout.BELOW, R.id.tv_nickName)
                 addRule(RelativeLayout.ALIGN_PARENT_END)
                 setMargins(0, dp(2f), 0, 0)
                 marginStart = 0
@@ -436,6 +441,104 @@ object MiuixReaderStyle {
             setPadding((16 * density).toInt(), paddingTop, (16 * density).toInt(), paddingBottom)
             setLineSpacing(0f, 1.55f)
         }
+        val actions = (item as? ViewGroup)?.getChildAt(2) as? LinearLayout ?: return
+        val support = item.findViewById<ImageView>(R.id.iv_support) ?: return
+        val oppose = item.findViewById<ImageView>(R.id.iv_oppose) ?: return
+        val score = item.findViewById<TextView>(R.id.tv_score) ?: return
+        val reply = item.findViewById<ImageView>(R.id.iv_reply) ?: return
+        val more = item.findViewById<ImageView>(R.id.iv_more) ?: return
+        actions.removeAllViews()
+        actions.gravity = Gravity.CENTER_VERTICAL
+        actions.setPadding(dp(16f), dp(4f), dp(8f), dp(12f))
+        val vote = LinearLayout(item.context).apply {
+            tag = "coui_vote"
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            background = GradientDrawable().apply {
+                cornerRadius = dp(24f).toFloat()
+                setColor(if (dark) Color.rgb(57, 59, 64) else Color.rgb(241, 242, 244))
+            }
+        }
+        fun action(icon: ImageView, drawable: Int, description: String) {
+            icon.setImageResource(drawable)
+            icon.imageTintList = ColorStateList.valueOf(summary)
+            icon.contentDescription = description
+            icon.scaleType = ImageView.ScaleType.CENTER_INSIDE
+            icon.setPadding(dp(12f), dp(12f), dp(12f), dp(12f))
+            icon.layoutParams = LinearLayout.LayoutParams(dp(44f), dp(44f))
+        }
+        action(support, R.drawable.ic_miuix_like, "赞")
+        action(oppose, R.drawable.ic_miuix_dislike, "踩")
+        action(reply, R.drawable.ic_miuix_reply, "回复")
+        action(more, R.drawable.ic_miuix_more, "更多")
+        score.setTextColor(summary)
+        score.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+        score.setPadding(dp(2f), 0, dp(2f), 0)
+        vote.addView(support)
+        vote.addView(score)
+        vote.addView(View(item.context).apply {
+            tag = "coui_vote_separator"
+            setBackgroundColor(summary)
+            alpha = 0.35f
+        }, LinearLayout.LayoutParams(dp(1f), dp(18f)))
+        vote.addView(oppose)
+        actions.addView(vote)
+        actions.addView(View(item.context), LinearLayout.LayoutParams(0, 1, 1f))
+        actions.addView(reply)
+        actions.addView(TextView(item.context).apply {
+            tag = "coui_reply_label"
+            text = "回复"
+            setTextColor(summary)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+            gravity = Gravity.CENTER_VERTICAL
+            setOnClickListener { reply.performClick() }
+        }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, dp(44f)))
+        actions.addView(more)
+    }
+
+    @JvmStatic
+    fun bindCouiVote(item: View, state: Int, showActions: Boolean, showScore: Boolean) {
+        val summary = if (ThemeManager.getInstance().isNightMode) Color.rgb(172, 176, 183) else Color.rgb(113, 118, 126)
+        val active = Color.rgb(35, 105, 224)
+        item.findViewById<ImageView>(R.id.iv_support)?.apply {
+            setImageResource(if (state > 0) R.drawable.ic_miuix_like_fill else R.drawable.ic_miuix_like)
+            imageTintList = ColorStateList.valueOf(if (state > 0) active else summary)
+        }
+        item.findViewById<ImageView>(R.id.iv_oppose)?.apply {
+            setImageResource(if (state < 0) R.drawable.ic_miuix_dislike_fill else R.drawable.ic_miuix_dislike)
+            imageTintList = ColorStateList.valueOf(if (state < 0) active else summary)
+        }
+        item.findViewWithTag<View>("coui_vote")?.visibility = if (showActions || showScore) View.VISIBLE else View.GONE
+        item.findViewWithTag<View>("coui_vote_separator")?.visibility = if (showActions) View.VISIBLE else View.GONE
+    }
+
+    @JvmStatic
+    fun styleCouiOwnerBadge(name: TextView) {
+        val original = name.text ?: return
+        val suffix = "(楼主)"
+        val start = original.length - suffix.length
+        if (start < 0 || original.subSequence(start, original.length).toString() != suffix) return
+        val text = SpannableString(original)
+        text.setSpan(object : ReplacementSpan() {
+            private val density = name.resources.displayMetrics.density
+            private val gap = (6 * density).roundToInt()
+            private val horizontal = (5 * density).roundToInt()
+            private val badgePaint = Paint(Paint.ANTI_ALIAS_FLAG)
+            override fun getSize(paint: Paint, text: CharSequence, start: Int, end: Int, fm: Paint.FontMetricsInt?): Int =
+                gap + horizontal * 2 + paint.measureText("楼主").roundToInt()
+            override fun draw(canvas: Canvas, text: CharSequence, start: Int, end: Int, x: Float,
+                              top: Int, y: Int, bottom: Int, paint: Paint) {
+                val width = horizontal * 2 + paint.measureText("楼主")
+                val left = x + gap
+                badgePaint.color = if (ThemeManager.getInstance().isNightMode) Color.rgb(41, 65, 99) else Color.rgb(222, 234, 255)
+                canvas.drawRoundRect(left, top.toFloat(), left + width, bottom.toFloat(), 5 * density, 5 * density, badgePaint)
+                val originalColor = paint.color
+                paint.color = Color.rgb(35, 105, 224)
+                canvas.drawText("楼主", left + horizontal, y.toFloat(), paint)
+                paint.color = originalColor
+            }
+        }, start, original.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        name.text = text
     }
 
     @JvmStatic
