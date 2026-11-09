@@ -19,12 +19,89 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  signing:
     if: ${{ github.repository == 'astarion1965974/nga-just-works' && github.ref == 'refs/heads/coui-preview' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    outputs:
+      mode: ${{ steps.signer.outputs.mode }}
+      backup_sha: ${{ steps.signer.outputs.backup_sha }}
+    steps:
+      - name: Find or create the fixed release signer
+        id: signer
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BACKUP_PASSWORD: ${{ secrets.NGA_COUI_KEY_BACKUP_PASSWORD }}
+          HAS_MANUAL_KEY: ${{ secrets.NGA_COUI_KEYSTORE_B64 != '' }}
+          HAS_MANUAL_PASSWORD: ${{ secrets.NGA_COUI_KEYSTORE_PASSWORD != '' }}
+          MANUAL_FINGERPRINT: ${{ vars.NGA_COUI_CERT_SHA256 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          api="repos/$GITHUB_REPOSITORY"
+          backup_tag=nga-coui-signing-v1
+          backup_sha="$(gh api "$api/git/matching-refs/tags/$backup_tag" |
+            jq -r --arg ref "refs/tags/$backup_tag" '.[] | select(.ref == $ref) | .object.sha')"
+
+          if [[ -n "$backup_sha" || -n "$BACKUP_PASSWORD" ]]; then
+            if [[ ! "$BACKUP_PASSWORD" =~ ^[A-Za-z0-9]{32,}$ ]]; then
+              echo "::error::Set NGA_COUI_KEY_BACKUP_PASSWORD to its original value of at least 32 random letters and digits."
+              exit 1
+            fi
+          fi
+
+          if [[ -z "$backup_sha" ]] && { [[ "$HAS_MANUAL_KEY" == true || "$HAS_MANUAL_PASSWORD" == true ]] || [[ -n "$MANUAL_FINGERPRINT" ]]; }; then
+            if [[ "$HAS_MANUAL_KEY" == true && "$HAS_MANUAL_PASSWORD" == true && "$MANUAL_FINGERPRINT" =~ ^[0-9a-f]{64}$ ]]; then
+              echo "mode=manual" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "::error::The previously configured signer is incomplete. Restore its secrets before signing."
+            exit 1
+          fi
+
+          if [[ -z "$BACKUP_PASSWORD" ]]; then
+            echo "mode=none" >> "$GITHUB_OUTPUT"
+            echo "::notice::Fixed signing is unconfigured. This run checks compilation only."
+            exit 0
+          fi
+
+          if [[ -z "$backup_sha" ]]; then
+            work="$(mktemp -d "$RUNNER_TEMP/nga-signing.XXXXXX")"
+            trap 'rm -rf "$work"' EXIT
+            keytool="$JAVA_HOME_21_X64/bin/keytool"
+            "$keytool" -J-Dkeystore.pkcs12.keyProtectionAlgorithm=PBEWithHmacSHA256AndAES_256 \
+              -J-Dkeystore.pkcs12.keyPbeIterationCount=200000 \
+              -genkeypair -alias nga-coloros -keyalg RSA -keysize 3072 -validity 10000 \
+              -storetype PKCS12 -keystore "$work/release.p12" -storepass:env BACKUP_PASSWORD \
+              -dname 'CN=NGA Just Works ColorOS Release'
+            fingerprint="$("$keytool" -J-Duser.language=en -J-Duser.country=US -list -v -storetype PKCS12 \
+              -keystore "$work/release.p12" -storepass:env BACKUP_PASSWORD -alias nga-coloros |
+              awk '/SHA256:/{print $2; exit}' | tr -d ':' | tr '[:upper:]' '[:lower:]')"
+            [[ "$fingerprint" =~ ^[0-9a-f]{64}$ ]]
+            base64 -w0 "$work/release.p12" | jq -Rs --arg fingerprint "$fingerprint" \
+              '{sha256: $fingerprint, encrypted_keystore: .}' > "$work/backup.json"
+            blob="$(base64 -w0 "$work/backup.json" | jq -Rs '{encoding:"base64", content:.}' |
+              gh api --method POST "$api/git/blobs" --input - --jq .sha)"
+            tree="$(jq -n --arg sha "$blob" '{tree:[{path:"backup.json", mode:"100644", type:"blob", sha:$sha}]}' |
+              gh api --method POST "$api/git/trees" --input - --jq .sha)"
+            backup_sha="$(jq -n --arg tree "$tree" '{message:"Store encrypted NGA COUI signing backup", tree:$tree, parents:[]}' |
+              gh api --method POST "$api/git/commits" --input - --jq .sha)"
+            gh api --method POST "$api/git/refs" -f ref="refs/tags/$backup_tag" -f sha="$backup_sha" > /dev/null
+          fi
+
+          [[ "$backup_sha" =~ ^[0-9a-f]{40}$ ]]
+          echo "mode=backup" >> "$GITHUB_OUTPUT"
+          echo "backup_sha=$backup_sha" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: signing
     runs-on: ubuntu-latest
     timeout-minutes: 25
     outputs:
-      signed: ${{ steps.signing.outputs.ready }}
+      signed: ${{ steps.verify.outcome == 'success' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -38,31 +115,19 @@ jobs:
           packages: platform-tools
       - name: Install Android 17 SDK
         run: sdkmanager 'platforms;android-37.0' 'build-tools;37.0.0'
-      - name: Detect fixed signing configuration
-        id: signing
-        env:
-          KEYSTORE: ${{ secrets.NGA_COUI_KEYSTORE_B64 }}
-          PASSWORD: ${{ secrets.NGA_COUI_KEYSTORE_PASSWORD }}
-          FINGERPRINT: ${{ vars.NGA_COUI_CERT_SHA256 }}
-        run: |
-          set -euo pipefail
-          if [[ -z "$KEYSTORE" && -z "$PASSWORD" && -z "$FINGERPRINT" ]]; then
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Fixed signing is unconfigured. This run checks compilation only."
-          elif [[ -n "$KEYSTORE" && -n "$PASSWORD" && "$FINGERPRINT" =~ ^[0-9a-f]{64}$ ]]; then
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "::error::Fixed signing is partially configured or the SHA-256 fingerprint is invalid."
-            exit 1
-          fi
       - name: Compile without producing an installable APK
-        if: steps.signing.outputs.ready == 'false'
+        if: needs.signing.outputs.mode == 'none'
         run: |
           ./gradlew :nga_phone_base_3.0:compileReleaseKotlin :nga_phone_base_3.0:compileReleaseJavaWithJavac \
             --no-daemon --console=plain --max-workers=3
       - name: Build with the fixed ARM64 signing key
-        if: steps.signing.outputs.ready == 'true'
+        id: signed_build
+        if: needs.signing.outputs.mode != 'none'
         env:
+          MODE: ${{ needs.signing.outputs.mode }}
+          BACKUP_SHA: ${{ needs.signing.outputs.backup_sha }}
+          BACKUP_PASSWORD: ${{ secrets.NGA_COUI_KEY_BACKUP_PASSWORD }}
+          GH_TOKEN: ${{ github.token }}
           KEYSTORE: ${{ secrets.NGA_COUI_KEYSTORE_B64 }}
           ANDROID_SIGNING_STORE_PASSWORD: ${{ secrets.NGA_COUI_KEYSTORE_PASSWORD }}
           FINGERPRINT: ${{ vars.NGA_COUI_CERT_SHA256 }}
@@ -70,21 +135,36 @@ jobs:
         run: |
           set -euo pipefail
           umask 077
-          export ANDROID_SIGNING_STORE_FILE="$RUNNER_TEMP/nga-coloros-release.p12"
+          work="$(mktemp -d "$RUNNER_TEMP/nga-signing.XXXXXX")"
+          trap 'rm -rf "$work"' EXIT
+          export ANDROID_SIGNING_STORE_FILE="$work/release.p12"
           export ANDROID_SIGNING_KEY_ALIAS=nga-coloros
+
+          if [[ "$MODE" == backup ]]; then
+            gh api "repos/$GITHUB_REPOSITORY/contents/backup.json?ref=$BACKUP_SHA" \
+              -H 'Accept: application/vnd.github.raw+json' > "$work/backup.json"
+            FINGERPRINT="$(jq -er '.sha256 | select(test("^[0-9a-f]{64}$"))' "$work/backup.json")"
+            jq -er '.encrypted_keystore' "$work/backup.json" | base64 --decode > "$ANDROID_SIGNING_STORE_FILE"
+            export ANDROID_SIGNING_STORE_PASSWORD="$BACKUP_PASSWORD"
+          else
+            test "$MODE" = manual
+            printf '%s' "$KEYSTORE" | base64 --decode > "$ANDROID_SIGNING_STORE_FILE"
+          fi
+
+          unset GH_TOKEN BACKUP_PASSWORD KEYSTORE
           export ANDROID_SIGNING_KEY_PASSWORD="$ANDROID_SIGNING_STORE_PASSWORD"
-          trap 'rm -f "$ANDROID_SIGNING_STORE_FILE"' EXIT
-          printf '%s' "$KEYSTORE" | base64 --decode > "$ANDROID_SIGNING_STORE_FILE"
           actual="$(keytool -J-Duser.language=en -J-Duser.country=US -list -v -storetype PKCS12 \
             -keystore "$ANDROID_SIGNING_STORE_FILE" -storepass:env ANDROID_SIGNING_STORE_PASSWORD \
             -alias "$ANDROID_SIGNING_KEY_ALIAS" | awk '/SHA256:/{print $2; exit}' | tr -d ':' | tr '[:upper:]' '[:lower:]')"
           test "$actual" = "$FINGERPRINT"
+          echo "fingerprint=$FINGERPRINT" >> "$GITHUB_OUTPUT"
           ./gradlew :nga_phone_base_3.0:assembleRelease -x :nga_phone_base_3.0:lintVitalRelease \
             --no-daemon --console=plain --max-workers=3
       - name: Verify release package
-        if: steps.signing.outputs.ready == 'true'
+        id: verify
+        if: needs.signing.outputs.mode != 'none'
         env:
-          FINGERPRINT: ${{ vars.NGA_COUI_CERT_SHA256 }}
+          FINGERPRINT: ${{ steps.signed_build.outputs.fingerprint }}
         shell: bash
         run: |
           set -euo pipefail
@@ -104,7 +184,7 @@ jobs:
           grep -F "certificate SHA-256 digest: $FINGERPRINT" "$RUNNER_TEMP/nga-apk-certificate"
           (cd dist && sha256sum "$apk" > "$apk.sha256" && sha256sum -c "$apk.sha256")
       - uses: actions/upload-artifact@v4
-        if: steps.signing.outputs.ready == 'true'
+        if: needs.signing.outputs.mode != 'none'
         with:
           name: nga-coloros17-arm64
           path: dist/
