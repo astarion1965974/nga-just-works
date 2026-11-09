@@ -162,6 +162,9 @@ public abstract class BaseActivity extends AppCompatActivity implements MiuixChr
         WindowInsetsControllerCompat controller =
                 WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
         controller.setAppearanceLightNavigationBars(!ThemeManager.getInstance().isNightMode());
+        if (mCouiStyle && (mComposeEnabled || isCouiPage())) {
+            controller.setAppearanceLightStatusBars(!ThemeManager.getInstance().isNightMode());
+        }
     }
 
     /**
@@ -416,6 +419,9 @@ public abstract class BaseActivity extends AppCompatActivity implements MiuixChr
         if (!isFinishing() && (mMiuixStyle != theme.isMiuixStyle()
                 || mCouiStyle != theme.isCouiStyle())) {
             recreate();
+        } else if (mCouiStyle && (mComposeEnabled || isCouiPage())) {
+            WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView())
+                    .setAppearanceLightStatusBars(!theme.isNightMode());
         }
     }
 

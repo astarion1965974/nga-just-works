@@ -2,6 +2,7 @@ package gov.anzong.androidnga.activity.compose
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.core.view.WindowCompat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -75,6 +76,20 @@ class SearchActivity : BaseComposeActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         viewModel.fid = intent.getIntExtra("fid", 0)
         super.onCreate(savedInstanceState)
+        updateCouiStatusBar()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        updateCouiStatusBar()
+    }
+
+    private fun updateCouiStatusBar() {
+        val theme = ThemeManager.getInstance()
+        if (theme.isCouiStyle) {
+            WindowCompat.getInsetsController(window, window.decorView)
+                .isAppearanceLightStatusBars = !theme.isNightMode
+        }
     }
 
     override fun buildContentView() {

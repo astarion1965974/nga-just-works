@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.danielstone.materialaboutlibrary.MaterialAboutActivity;
@@ -48,6 +49,8 @@ public class AboutActivity extends MaterialAboutActivity {
         super.onCreate(savedInstanceState);
         PredictiveBack.install(this);
         if (mCouiStyle) {
+            WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView())
+                    .setAppearanceLightStatusBars(!ThemeManager.getInstance().isNightMode());
             CouiAboutPage.show(this, getActivityTitle(), getMaterialAboutList(this));
             return;
         }
@@ -66,6 +69,9 @@ public class AboutActivity extends MaterialAboutActivity {
         ThemeManager theme = ThemeManager.getInstance();
         if (!isFinishing() && (mMiuixStyle != theme.isMiuixStyle() || mCouiStyle != theme.isCouiStyle())) {
             recreate();
+        } else if (mCouiStyle) {
+            WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView())
+                    .setAppearanceLightStatusBars(!theme.isNightMode());
         }
     }
 
