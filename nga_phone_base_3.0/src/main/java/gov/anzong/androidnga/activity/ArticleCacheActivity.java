@@ -66,7 +66,7 @@ public class ArticleCacheActivity extends BaseActivity {
     private void initViews(List<Integer> pages) {
         View classic = getLayoutInflater().inflate(R.layout.fragment_article_tab, null);
         MiuixReaderTabsState miuixTabs = null;
-        if (isMiuixPage()) {
+        if (isMiuixPage() || isCouiPage()) {
             miuixTabs = new MiuixReaderTabsState();
             ViewPager pager = classic.findViewById(R.id.pager);
             MiuixReaderCallbacks callbacks = new MiuixReaderCallbacks(
@@ -110,6 +110,11 @@ public class ArticleCacheActivity extends BaseActivity {
     @Override
     protected boolean isMiuixPage() {
         return isMiuixStyle();
+    }
+
+    @Override
+    public boolean isCouiPage() {
+        return isCouiStyle();
     }
 
     @Override protected void onResume() {

@@ -9,6 +9,7 @@ import android.text.style.BackgroundColorSpan;
 import android.text.style.StyleSpan;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
 
 import androidx.appcompat.app.ActionBar;
@@ -37,8 +38,10 @@ public class SignPostActivity extends BaseActivity {
         setToolbarEnabled(true);
         super.onCreate(savedInstanceState);
         setClassicOrMiuixContentView(R.layout.activity_change_sign_reply, R.id.reply_body_edittext_container);
-        if (isMiuixPage()) {
-            MiuixEditorStyle.styleForm(findViewById(R.id.reply_body_edittext_container));
+        if (isMiuixPage() || isCouiPage()) {
+            View form = findViewById(R.id.reply_body_edittext_container);
+            MiuixEditorStyle.styleForm(form);
+            if (isCouiPage()) form.setBackgroundColor(android.graphics.Color.TRANSPARENT);
         }
         initBodyText();
         mPostParam = new SignPostParam();
@@ -134,5 +137,10 @@ public class SignPostActivity extends BaseActivity {
     @Override
     protected boolean isMiuixPage() {
         return isMiuixStyle();
+    }
+
+    @Override
+    public boolean isCouiPage() {
+        return isCouiStyle();
     }
 }

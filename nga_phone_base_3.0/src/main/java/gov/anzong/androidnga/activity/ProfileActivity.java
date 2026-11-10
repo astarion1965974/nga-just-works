@@ -27,6 +27,7 @@ import java.util.Objects;
 import butterknife.BindView;
 import com.justwen.androidnga.ui.compose.miuix.MiuixViewShellKt;
 import gov.anzong.androidnga.ui.miuix.MiuixProfileStyle;
+import gov.anzong.androidnga.ui.coui.CouiViewShellKt;
 
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -146,12 +147,18 @@ public class ProfileActivity extends BaseActivity implements OnHttpCallBack<Prof
         }
 
         View classic = getLayoutInflater().inflate(R.layout.activity_user_profile, null);
-        if (isMiuixPage()) {
-            // Miuix top app bar above the classic profile; the avatar header stays as content
-            // and its own toolbar row is hidden.
+        if (isMiuixPage() || isCouiPage()) {
+            // Retain profile bindings and actions while the selected appearance owns the top bar.
             classic.findViewById(R.id.toolbar).setVisibility(View.GONE);
             MiuixProfileStyle.style(classic);
-            setContentView(MiuixViewShellKt.miuixViewShell(this, classic, classic));
+            if (isCouiPage()) {
+                classic.setBackgroundColor(Color.TRANSPARENT);
+                classic.findViewById(R.id.app_bar).setBackgroundColor(Color.TRANSPARENT);
+                classic.findViewById(R.id.toolbar_layout).setBackgroundColor(Color.TRANSPARENT);
+                setContentView(CouiViewShellKt.couiViewShell(this, classic, classic));
+            } else {
+                setContentView(MiuixViewShellKt.miuixViewShell(this, classic, classic));
+            }
         } else {
             setContentView(classic);
         }
@@ -179,7 +186,7 @@ public class ProfileActivity extends BaseActivity implements OnHttpCallBack<Prof
 
     private void loadBasicProfile(ProfileData profileInfo) {
         mToolbarLayout.setTitle(profileInfo.getUserName());
-        if (isMiuixPage()) {
+        if (isMiuixPage() || isCouiPage()) {
             setTitle(profileInfo.getUserName());
         }
         mUidTv.setText(String.format("用户ID : %s", profileInfo.getUid()));
@@ -459,7 +466,7 @@ public class ProfileActivity extends BaseActivity implements OnHttpCallBack<Prof
         } else {
             bgColor = getResources().getColor(R.color.profilebgcolor);
         }
-        if (isMiuixPage()) {
+        if (isMiuixPage() || isCouiPage()) {
             int[] miuix = MiuixProfileStyle.webColors(contentTV);
             bgColor = miuix[0];
             fgColor = miuix[1];
@@ -487,7 +494,7 @@ public class ProfileActivity extends BaseActivity implements OnHttpCallBack<Prof
             bgColor = getResources().getColor(R.color.profilebgcolor);
             fgColor = getResources().getColor(R.color.profilefcolor);
         }
-        if (isMiuixPage()) {
+        if (isMiuixPage() || isCouiPage()) {
             int[] miuix = MiuixProfileStyle.webColors(contentTV);
             bgColor = miuix[0];
             fgColor = miuix[1];
@@ -514,7 +521,7 @@ public class ProfileActivity extends BaseActivity implements OnHttpCallBack<Prof
             bgColor = getResources().getColor(R.color.profilebgcolor);
             fgColor = getResources().getColor(R.color.profilefcolor);
         }
-        if (isMiuixPage()) {
+        if (isMiuixPage() || isCouiPage()) {
             int[] miuix = MiuixProfileStyle.webColors(contentTV);
             bgColor = miuix[0];
             fgColor = miuix[1];
@@ -604,5 +611,10 @@ public class ProfileActivity extends BaseActivity implements OnHttpCallBack<Prof
     @Override
     protected boolean isMiuixPage() {
         return isMiuixStyle();
+    }
+
+    @Override
+    public boolean isCouiPage() {
+        return isCouiStyle();
     }
 }

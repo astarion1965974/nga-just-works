@@ -31,4 +31,9 @@ public class TopicCacheActivity extends BaseActivity {
     protected boolean isMiuixPage() {
         return isMiuixStyle();
     }
+
+    @Override
+    public boolean isCouiPage() {
+        return isCouiStyle();
+    }
 }

@@ -29,6 +29,7 @@ import java.util.HashSet;
 
 import com.justwen.androidnga.ui.compose.miuix.MiuixViewShellKt;
 import gov.anzong.androidnga.ui.miuix.MiuixEditorStyle;
+import gov.anzong.androidnga.ui.coui.CouiViewShellKt;
 
 import gov.anzong.androidnga.R;
 import gov.anzong.androidnga.util.ToastUtils;
@@ -142,13 +143,19 @@ public class AvatarPostActivity extends BaseActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
+        if (ThemeManager.getInstance().isCouiStyle()) setToolbarEnabled(true);
         super.onCreate(savedInstanceState);
         v = this.getLayoutInflater().inflate(R.layout.activity_change_avatar, null);
-        if (isMiuixPage()) {
+        if (isMiuixPage() || isCouiPage()) {
             // Miuix top app bar above the classic form (this screen uses the window ActionBar
             // in the classic appearance).
             MiuixEditorStyle.styleForm(v);
-            this.setContentView(MiuixViewShellKt.miuixViewShell(this, v, v));
+            if (isCouiPage()) {
+                v.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+                this.setContentView(CouiViewShellKt.couiViewShell(this, v, v));
+            } else {
+                this.setContentView(MiuixViewShellKt.miuixViewShell(this, v, v));
+            }
         } else {
             v.setBackgroundColor(getResources().getColor(
                     ThemeManager.getInstance().getBackgroundColor()));
@@ -166,7 +173,7 @@ public class AvatarPostActivity extends BaseActivity implements
         submit_button = (Button) findViewById(R.id.submit_button);
         titleText.setSelected(true);
         ThemeManager tm = ThemeManager.getInstance();
-        if (tm.isNightMode() && !isMiuixPage()) {
+        if (tm.isNightMode() && !isMiuixPage() && !isCouiPage()) {
             titleText.setBackgroundResource(tm.getBackgroundColor());
             int textColor = this.getResources().getColor(
                     tm.getForegroundColor());
@@ -210,6 +217,11 @@ public class AvatarPostActivity extends BaseActivity implements
     @Override
     protected boolean isMiuixPage() {
         return isMiuixStyle();
+    }
+
+    @Override
+    public boolean isCouiPage() {
+        return isCouiStyle();
     }
 
     @Override

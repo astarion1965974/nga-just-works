@@ -181,12 +181,12 @@ jobs:
           set -euo pipefail
           src_dir=nga_phone_base_3.0/build/outputs/apk/release
           test "$(find "$src_dir" -maxdepth 1 -type f -name '*.apk' ! -name '*unsigned*' | wc -l)" = 1
-          apk=NGA-Just-Works-COUI-4.5.12-arm64.apk
+          apk=NGA-Just-Works-COUI-4.5.13-arm64.apk
           mkdir -p dist
           cp "$(find "$src_dir" -maxdepth 1 -type f -name '*.apk' ! -name '*unsigned*' -print -quit)" "dist/$apk"
           tools="$ANDROID_HOME/build-tools/37.0.0"
           "$tools/aapt" dump badging "dist/$apk" > "$RUNNER_TEMP/nga-apk-info"
-          grep -F "package: name='com.astarion.ngajustworks.coui' versionCode='4062' versionName='4.5.12'" "$RUNNER_TEMP/nga-apk-info"
+          grep -F "package: name='com.astarion.ngajustworks.coui' versionCode='4063' versionName='4.5.13'" "$RUNNER_TEMP/nga-apk-info"
           grep -Fx "sdkVersion:'37'" "$RUNNER_TEMP/nga-apk-info"
           grep -Fx "targetSdkVersion:'37'" "$RUNNER_TEMP/nga-apk-info"
           grep -Fx "native-code: 'arm64-v8a'" "$RUNNER_TEMP/nga-apk-info"
@@ -219,13 +219,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          tag=coui-v4.5.12
-          apk=NGA-Just-Works-COUI-4.5.12-arm64.apk
+          tag=coui-v4.5.13
+          apk=NGA-Just-Works-COUI-4.5.13-arm64.apk
           (cd dist && sha256sum -c "$apk.sha256")
           if [[ "$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json isDraft --jq '.isDraft' 2>/dev/null || true)" == false ]]; then
             echo "::notice::Release $tag is already published."
             exit 0
           fi
           gh release create "$tag" "dist/$apk" "dist/$apk.sha256" --repo "$GITHUB_REPOSITORY" \
-            --target "$GITHUB_SHA" --prerelease --title "NGA Just Works COUI 4.5.12" \
-            --notes "Extend the mist-blue gradient palette across COUI settings, search, drawer, and other page shells. Uses the existing signing certificate for in-place upgrades."
+            --target "$GITHUB_SHA" --prerelease --title "NGA Just Works COUI 4.5.13" \
+            --notes "Extend the mist-blue palette to COUI settings, search, profile, cache and account screens. Uses the existing signing certificate for in-place upgrades."
