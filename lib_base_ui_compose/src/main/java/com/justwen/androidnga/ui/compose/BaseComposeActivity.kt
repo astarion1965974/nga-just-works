@@ -74,7 +74,8 @@ abstract class BaseComposeActivity : FragmentActivity(), MiuixChromeOwner {
                 ) {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
-                        color = if (NgaUiStyle.isCoui()) Color.Transparent else MaterialTheme.colors.background
+                        color = if (NgaUiStyle.isCoui()) Color.Transparent else MaterialTheme.colors.background,
+                            contentColor = MaterialTheme.colors.onBackground
                     ) {
                         if (NgaUiStyle.isCoui()) {
                             NgaComposeBackground { ContentView() }
