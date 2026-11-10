@@ -9,6 +9,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import coil.compose.rememberAsyncImagePainter
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -34,6 +35,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.itos.coui.backdrop.couiBackdrop
 import com.itos.coui.backdrop.rememberCouiBackdrop
@@ -51,9 +54,12 @@ import com.itos.coui.text.Text
 import com.itos.coui.theme.CouiTheme
 import com.itos.coui.theme.LocalCouiContentColor
 import com.itos.coui.topappbar.TopAppBar
+import com.itos.coui.topappbar.CouiTopAppBarDefaults
 import com.itos.coui.topappbar.TopAppBarButton
 import com.justwen.androidnga.ui.compose.widget.OptionMenuData
 import com.justwent.androidnga.bu.UserManager
+import gov.anzong.androidnga.ui.coui.NgaMistTheme
+import gov.anzong.androidnga.ui.coui.ngaMistBrush
 import gov.anzong.androidnga.activity.compose.board.ForumBoardView
 import gov.anzong.androidnga.activity.compose.board.ForumBoardViewModel
 import gov.anzong.androidnga.activity.compose.board.LocalCouiBoardStyle
@@ -72,7 +78,7 @@ internal fun CouiHomeScreen(
     footer: MiuixDrawerEntry,
     onAccountClick: (User?, Int) -> Unit,
 ) {
-    CouiTheme(darkTheme = ThemeManager.getInstance().isNightMode) {
+    NgaMistTheme(dark = ThemeManager.getInstance().isNightMode) {
         val drawer = rememberHomeDrawerState()
         val gestures = remember { HomeDrawerGestureState() }
         val scope = rememberCoroutineScope()
@@ -90,6 +96,7 @@ internal fun CouiHomeScreen(
                 modifier = Modifier.fillMaxSize(),
                 topBar = {
                     TopAppBar(
+                        colors = CouiTopAppBarDefaults.colors(backgroundColor = Color.Transparent),
                         title = { Text(text = title, kind = CouiTextKind.Toolbar) },
                         navigationIcon = {
                             TopAppBarButton(onClick = { scope.launch { drawer.open() } }) {
@@ -129,23 +136,30 @@ internal fun CouiHomeScreen(
                 },
             ) { padding ->
                 val tabBackdrop = rememberCouiBackdrop()
-                Box(Modifier.fillMaxSize().padding(top = padding.calculateTopPadding())) {
-                    Box(
-                        Modifier.fillMaxWidth().height(52.dp)
-                            .couiBackdrop(tabBackdrop)
-                            .background(CouiTheme.colorScheme.background),
-                    )
-                    CompositionLocalProvider(LocalCouiBoardStyle provides true) {
-                        ForumBoardView(
-                            forumBoardViewModel = forumBoardViewModel,
-                            pagerModifier = Modifier.onGloballyPositioned { gestures.pagerBounds = it.boundsInRoot() },
-                            onPagerInteractionChanged = {
-                                gestures.settledPage = it?.settledPage ?: -1
-                                gestures.pagerSettled = it?.isScrollInProgress == false
-                            },
-                            onFavoriteReorderActiveChanged = { gestures.favoriteReorderActive = it },
-                            tabBackdrop = tabBackdrop,
+                BoxWithConstraints(Modifier.fillMaxSize()) {
+                    val density = LocalDensity.current
+                    val viewportHeight = with(density) { maxHeight.toPx() }
+                    val topInset = with(density) { padding.calculateTopPadding().toPx() }
+                    val dark = CouiTheme.isDark
+                    Box(Modifier.matchParentSize().background(ngaMistBrush(dark, false, viewportHeight)))
+                    Box(Modifier.fillMaxSize().padding(top = padding.calculateTopPadding())) {
+                        Box(
+                            Modifier.fillMaxWidth().height(52.dp)
+                                .couiBackdrop(tabBackdrop)
+                                .background(ngaMistBrush(dark, false, viewportHeight, topInset)),
                         )
+                        CompositionLocalProvider(LocalCouiBoardStyle provides true) {
+                            ForumBoardView(
+                                forumBoardViewModel = forumBoardViewModel,
+                                pagerModifier = Modifier.onGloballyPositioned { gestures.pagerBounds = it.boundsInRoot() },
+                                onPagerInteractionChanged = {
+                                    gestures.settledPage = it?.settledPage ?: -1
+                                    gestures.pagerSettled = it?.isScrollInProgress == false
+                                },
+                                onFavoriteReorderActiveChanged = { gestures.favoriteReorderActive = it },
+                                tabBackdrop = tabBackdrop,
+                            )
+                        }
                     }
                 }
             }

@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -123,10 +124,11 @@ internal fun CouiForumPage(
     onTitleClick: (() -> Unit)? = null,
     extraTopBar: (@Composable (CouiBackdrop) -> Unit)? = null,
     progressiveHeader: Boolean = false,
+    mistBackground: Boolean = false,
     floatingAction: (@Composable BoxScope.() -> Unit)? = null,
     content: @Composable (PaddingValues) -> Unit,
 ) {
-    CouiTheme(darkTheme = ThemeManager.getInstance().isNightMode) {
+    NgaMistTheme(dark = ThemeManager.getInstance().isNightMode) {
         val title = pageTitle ?: (activity as? MiuixChromeOwner)?.miuixChrome?.title.orEmpty()
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -192,7 +194,17 @@ internal fun CouiForumPage(
                 }
             },
             floatingActionButton = floatingAction,
-            content = content,
+            content = { padding ->
+                if (mistBackground) {
+                    BoxWithConstraints(Modifier.fillMaxSize()) {
+                        val viewportHeight = with(LocalDensity.current) { maxHeight.toPx() }
+                        Box(Modifier.matchParentSize().background(ngaMistBrush(CouiTheme.isDark, true, viewportHeight)))
+                        content(padding)
+                    }
+                } else {
+                    content(padding)
+                }
+            },
         )
     }
 }

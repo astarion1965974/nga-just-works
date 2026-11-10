@@ -41,6 +41,10 @@ import gov.anzong.androidnga.R
 import androidx.compose.ui.viewinterop.AndroidView
 import com.itos.coui.backdrop.CouiBackdrop
 import com.itos.coui.chip.ChipTab
+import com.itos.coui.chip.CouiChipTabDefaults
+import com.itos.coui.shape.CouiShape
+import com.itos.coui.theme.CouiTheme
+import androidx.compose.foundation.background
 import gov.anzong.androidnga.ui.miuix.MiuixReaderCallbacks
 import gov.anzong.androidnga.ui.miuix.MiuixReaderTabsState
 import kotlinx.coroutines.delay
@@ -52,6 +56,7 @@ internal fun CouiReaderPage(activity: Activity, content: View, tabs: MiuixReader
     CouiForumPage(
         activity = activity,
         progressiveHeader = true,
+        mistBackground = true,
         onTitleClick = callbacks.onTitleClick,
         extraTopBar = { backdrop ->
             if (tabs.pages.size > 1) ReaderPages(backdrop, tabs, callbacks)
@@ -142,9 +147,9 @@ private fun ReaderPages(backdrop: CouiBackdrop, tabs: MiuixReaderTabsState, call
         itemsIndexed(pages) { index, label ->
             val refresh = callbacks.onReplyLongPressRepeat
             ChipTab(
-                modifier = if (index == selected && refresh != null) {
-                    Modifier.holdToRefresh(refresh, callbacks.longPressRepeatMillis)
-                } else Modifier,
+                modifier = (if (index == selected) Modifier.background(ngaSelectedChipColor(CouiTheme.isDark), CouiShape(999.dp)) else Modifier)
+                    .then(if (index == selected && refresh != null) Modifier.holdToRefresh(refresh, callbacks.longPressRepeatMillis) else Modifier),
+                contentColor = if (index == selected) CouiTheme.colorScheme.accentOnSurface else CouiChipTabDefaults.contentColor(CouiTheme.isDark),
                 selected = index == selected,
                 onClick = {
                     if (index == selected) callbacks.onTabReselected() else callbacks.onTabSelected(index)

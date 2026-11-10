@@ -10,6 +10,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.staticCompositionLocalOf
 import com.itos.coui.backdrop.CouiBackdrop
 import com.itos.coui.chip.ChipTab
+import com.itos.coui.chip.CouiChipTabDefaults
+import gov.anzong.androidnga.ui.coui.ngaSelectedChipColor
 import com.itos.coui.layout.CouiPageDefaults
 import com.itos.coui.shape.CouiShape
 import com.itos.coui.theme.CouiTheme
@@ -149,7 +151,11 @@ fun ForumBoardView(
             },
             onTabReorderActiveChanged = { tabReorderActive = it },
             tabContent = if (tabBackdrop == null) null else { modifier, label, selected, onClick ->
-                ChipTab(modifier = modifier, selected = selected, onClick = onClick, label = label, backdrop = tabBackdrop)
+                ChipTab(
+                    modifier = if (selected) modifier.background(ngaSelectedChipColor(CouiTheme.isDark), CouiShape(999.dp)) else modifier,
+                    selected = selected, onClick = onClick, label = label, backdrop = tabBackdrop,
+                    contentColor = if (selected) CouiTheme.colorScheme.accentOnSurface else CouiChipTabDefaults.contentColor(CouiTheme.isDark),
+                )
             },
         ) { pageIndex ->
             HomePage(compact) {

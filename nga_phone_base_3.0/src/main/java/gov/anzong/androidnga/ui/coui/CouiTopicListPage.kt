@@ -79,6 +79,7 @@ internal fun CouiTopicListPage(activity: Activity, state: MiuixTopicListState, c
     CouiForumPage(
         activity = activity,
         progressiveHeader = true,
+        mistBackground = true,
         onTitleClick = callbacks.onTitleClick?.let { refresh ->
             {
                 scope.launch { listState.scrollToItem(0) }
