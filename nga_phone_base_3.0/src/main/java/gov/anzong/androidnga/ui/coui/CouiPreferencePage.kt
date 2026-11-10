@@ -19,6 +19,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
@@ -43,6 +44,7 @@ import com.itos.coui.text.Text
 import com.itos.coui.theme.CouiTheme
 import com.itos.coui.theme.LocalCouiContentColor
 import com.itos.coui.topappbar.TopAppBar
+import com.itos.coui.topappbar.CouiTopAppBarDefaults
 import com.itos.coui.topappbar.TopAppBarButton
 import gov.anzong.androidnga.ui.miuix.EXTRA_CUSTOM_DIALOG
 import gov.anzong.androidnga.ui.miuix.preferenceSections
@@ -59,11 +61,12 @@ internal fun CouiPreferencePage(
 ) {
     // The hidden PreferenceGroupAdapter drives visibility, summaries and checked state.
     val sections = remember(screen, revision) { screen?.let(::preferenceSections).orEmpty() }
-    CouiTheme(darkTheme = dark) {
+    NgaMistTheme(dark = dark) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {
                 TopAppBar(
+                    colors = CouiTopAppBarDefaults.colors(backgroundColor = Color.Transparent),
                     title = { Text(text = title, kind = CouiTextKind.Toolbar) },
                     actions = actions,
                     navigationIcon = {
@@ -78,19 +81,21 @@ internal fun CouiPreferencePage(
                 )
             },
         ) { padding ->
-            LazyColumn(
-                modifier = Modifier.fillMaxSize().consumeWindowInsets(padding),
-                contentPadding = padding,
-            ) {
-                items(sections) { section ->
-                    Group(title = section.title) {
-                        section.rows.forEachIndexed { index, preference ->
-                            CouiPreferenceRow(preference, revision, onClick)
-                            if (index < section.rows.lastIndex) Divider()
+            NgaMistBackground(Modifier.fillMaxSize()) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().consumeWindowInsets(padding),
+                    contentPadding = padding,
+                ) {
+                    items(sections) { section ->
+                        Group(title = section.title) {
+                            section.rows.forEachIndexed { index, preference ->
+                                CouiPreferenceRow(preference, revision, onClick)
+                                if (index < section.rows.lastIndex) Divider()
+                            }
                         }
                     }
+                    item { Box(Modifier.padding(bottom = CouiPageDefaults.groupSpacing)) }
                 }
-                item { Box(Modifier.padding(bottom = CouiPageDefaults.groupSpacing)) }
             }
         }
     }

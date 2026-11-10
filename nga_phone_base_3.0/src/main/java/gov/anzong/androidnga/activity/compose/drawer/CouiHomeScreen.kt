@@ -59,6 +59,7 @@ import com.itos.coui.topappbar.TopAppBarButton
 import com.justwen.androidnga.ui.compose.widget.OptionMenuData
 import com.justwent.androidnga.bu.UserManager
 import gov.anzong.androidnga.ui.coui.NgaMistTheme
+import gov.anzong.androidnga.ui.coui.NgaMistBackground
 import gov.anzong.androidnga.ui.coui.ngaMistBrush
 import gov.anzong.androidnga.activity.compose.board.ForumBoardView
 import gov.anzong.androidnga.activity.compose.board.ForumBoardViewModel
@@ -177,65 +178,67 @@ private fun CouiDrawer(
     val active by UserManager.getActiveIndexLiveData().observeAsState(0)
     val user = users.getOrNull(active ?: 0)
     val colors = CouiTheme.colorScheme
-    Column(
-        Modifier.width(300.dp).fillMaxHeight().background(colors.background)
-            .statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState())
-            .padding(bottom = CouiPageDefaults.groupSpacing),
-    ) {
-        Group {
-            Item(
-                iconSize = 48.dp,
-                icon = {
-                    val fallback = painterResource(com.justwen.androidnga.module.message.R.drawable.default_avatar)
-                    Image(
-                        painter = if (user?.avatarUrl.isNullOrEmpty()) fallback else {
-                            rememberAsyncImagePainter(user?.avatarUrl, placeholder = fallback, error = fallback)
-                        },
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.size(48.dp).clip(CircleShape),
+    NgaMistBackground(Modifier.width(300.dp).fillMaxHeight()) {
+        Column(
+            Modifier.fillMaxSize()
+                .statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState())
+                .padding(bottom = CouiPageDefaults.groupSpacing),
+        ) {
+            Group {
+                Item(
+                    iconSize = 48.dp,
+                    icon = {
+                        val fallback = painterResource(com.justwen.androidnga.module.message.R.drawable.default_avatar)
+                        Image(
+                            painter = if (user?.avatarUrl.isNullOrEmpty()) fallback else {
+                                rememberAsyncImagePainter(user?.avatarUrl, placeholder = fallback, error = fallback)
+                            },
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.size(48.dp).clip(CircleShape),
+                        )
+                    },
+                    title = { Text(text = user?.nickName ?: "未登录", kind = CouiTextKind.PreferenceTitle) },
+                    summary = { Text(text = user?.let { "UID ${it.userId}" } ?: "点击登录账号", kind = CouiTextKind.PreferenceSummary) },
+                    onClick = { openDestination { onAccountClick(user, users.size) } },
+                )
+                if (users.size > 1) {
+                    Divider()
+                    val anchor = rememberCouiMenuAnchor()
+                    var expanded by remember { mutableStateOf(false) }
+                    Item(
+                        modifier = Modifier.couiMenuAnchor(anchor),
+                        title = { Text(text = "切换账号", kind = CouiTextKind.PreferenceTitle) },
+                        onClick = { anchor.open { expanded = true } },
                     )
-                },
-                title = { Text(text = user?.nickName ?: "未登录", kind = CouiTextKind.PreferenceTitle) },
-                summary = { Text(text = user?.let { "UID ${it.userId}" } ?: "点击登录账号", kind = CouiTextKind.PreferenceSummary) },
-                onClick = { openDestination { onAccountClick(user, users.size) } },
-            )
-            if (users.size > 1) {
-                Divider()
-                val anchor = rememberCouiMenuAnchor()
-                var expanded by remember { mutableStateOf(false) }
-                Item(
-                    modifier = Modifier.couiMenuAnchor(anchor),
-                    title = { Text(text = "切换账号", kind = CouiTextKind.PreferenceTitle) },
-                    onClick = { anchor.open { expanded = true } },
-                )
-                Menu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false },
-                    anchor = anchor,
-                    items = users.mapIndexed { index, account ->
-                        CouiMenuItem(index, accountLabel(account), selected = index == active)
-                    },
-                    onItemClick = {
-                        expanded = false
-                        if (it.value != active) UserManager.setActiveIndex(it.value)
-                    },
-                )
-            }
-        }
-        Group {
-            entries.forEachIndexed { index, entry ->
-                if (index > 0) {
-                    Divider(startIndent = CouiPageDefaults.rowPadding + CouiPageDefaults.iconSize + CouiPageDefaults.iconSpacing)
+                    Menu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        anchor = anchor,
+                        items = users.mapIndexed { index, account ->
+                            CouiMenuItem(index, accountLabel(account), selected = index == active)
+                        },
+                        onItemClick = {
+                            expanded = false
+                            if (it.value != active) UserManager.setActiveIndex(it.value)
+                        },
+                    )
                 }
-                Item(
-                    icon = { Icon(entry.icon, null, tint = colors.onSurface) },
-                    title = { Text(text = entry.title, kind = CouiTextKind.PreferenceTitle) },
-                    trailing = {
-                        entry.badge?.let { Text(text = it, kind = CouiTextKind.PreferenceValue, color = colors.accent) }
-                    },
-                    onClick = { openDestination(entry.onClick) },
-                )
+            }
+            Group {
+                entries.forEachIndexed { index, entry ->
+                    if (index > 0) {
+                        Divider(startIndent = CouiPageDefaults.rowPadding + CouiPageDefaults.iconSize + CouiPageDefaults.iconSpacing)
+                    }
+                    Item(
+                        icon = { Icon(entry.icon, null, tint = colors.onSurface) },
+                        title = { Text(text = entry.title, kind = CouiTextKind.PreferenceTitle) },
+                        trailing = {
+                            entry.badge?.let { Text(text = it, kind = CouiTextKind.PreferenceValue, color = colors.accent) }
+                        },
+                        onClick = { openDestination(entry.onClick) },
+                    )
+                }
             }
         }
     }

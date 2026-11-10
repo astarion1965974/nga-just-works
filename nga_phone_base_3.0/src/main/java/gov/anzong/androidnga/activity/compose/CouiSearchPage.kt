@@ -57,6 +57,8 @@ import com.itos.coui.topappbar.TopAppBarSurface
 import gov.anzong.androidnga.ui.coui.CouiBackButton
 import gov.anzong.androidnga.ui.coui.CouiSolidHeader
 import gov.anzong.androidnga.ui.coui.CouiTopBarRow
+import gov.anzong.androidnga.ui.coui.NgaMistTheme
+import gov.anzong.androidnga.ui.coui.NgaMistBackground
 import sp.phone.theme.ThemeManager
 
 @Composable
@@ -76,7 +78,7 @@ internal fun CouiSearchPage(viewModel: SearchViewModel, onBack: () -> Unit, onSe
         }
     }
     val setExpanded: (Boolean) -> Unit = { open -> if (!open) onBack() }
-    CouiTheme(darkTheme = ThemeManager.getInstance().isNightMode) {
+    NgaMistTheme(dark = ThemeManager.getInstance().isNightMode) {
         Scaffold(
             modifier = Modifier.fillMaxSize().imePadding(),
             topBar = {
@@ -108,8 +110,9 @@ internal fun CouiSearchPage(viewModel: SearchViewModel, onBack: () -> Unit, onSe
                 }
             },
         ) { padding ->
-            Column(
-                modifier = Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)
+            NgaMistBackground(Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)
                     .verticalScroll(rememberScrollState()).padding(bottom = CouiPageDefaults.groupSpacing),
             ) {
                 when (mode) {
@@ -141,8 +144,9 @@ internal fun CouiSearchPage(viewModel: SearchViewModel, onBack: () -> Unit, onSe
                         })
                     }
                 }
-                if (history.isNotEmpty()) {
-                    SearchHistory(history, submit, viewModel::deleteHistory, viewModel::clearHistory)
+                    if (history.isNotEmpty()) {
+                        SearchHistory(history, submit, viewModel::deleteHistory, viewModel::clearHistory)
+                    }
                 }
             }
         }

@@ -72,8 +72,8 @@ task clean(type: Delete) {
     delete rootProject.buildDir
 }
 
-def localAppVersionName = '4.5.11'
-def localAppVersionCode = 4061
+def localAppVersionName = '4.5.12'
+def localAppVersionCode = 4062
 def ciVersionName = providers.environmentVariable('CI_VERSION_NAME').orNull
 def ciVersionCode = providers.environmentVariable('CI_VERSION_CODE').orNull
 

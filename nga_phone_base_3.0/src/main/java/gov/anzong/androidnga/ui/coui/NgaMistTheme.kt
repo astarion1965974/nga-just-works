@@ -1,6 +1,12 @@
 package gov.anzong.androidnga.ui.coui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import com.itos.coui.theme.CouiPresets
@@ -40,3 +46,17 @@ internal fun ngaMistBrush(dark: Boolean, subtle: Boolean, heightPx: Float, topOf
 
 internal fun ngaSelectedChipColor(dark: Boolean): Color =
     if (dark) Color(0xFF2B4053) else Color(0xFFDCEAF8)
+
+/** Draw behind scroll content so the gradient stays fixed and enters Scaffold's backdrop. */
+@Composable
+internal fun NgaMistBackground(
+    modifier: Modifier = Modifier,
+    subtle: Boolean = true,
+    content: @Composable BoxScope.() -> Unit,
+) {
+    BoxWithConstraints(modifier) {
+        val viewportHeight = with(LocalDensity.current) { maxHeight.toPx() }
+        Box(Modifier.matchParentSize().background(ngaMistBrush(CouiTheme.isDark, subtle, viewportHeight)))
+        content()
+    }
+}

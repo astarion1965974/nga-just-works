@@ -5,7 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -36,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.style.TextOverflow
 import com.itos.coui.backdrop.CouiBackdrop
 import com.itos.coui.backdrop.couiBackdrop
@@ -69,9 +69,11 @@ fun isCouiForumHost(activity: Activity?): Boolean = (activity as? BaseActivity)?
 @Composable
 internal fun CouiSolidHeader(content: @Composable (CouiBackdrop) -> Unit) {
     val backdrop = rememberCouiBackdrop()
-    val color = CouiTheme.colorScheme.background
-    Box(Modifier.fillMaxWidth().background(color)) {
-        Box(Modifier.matchParentSize().couiBackdrop(backdrop).background(color))
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    val height = with(LocalDensity.current) { screenHeight.toPx() }
+    val brush = ngaMistBrush(CouiTheme.isDark, true, height)
+    Box(Modifier.fillMaxWidth()) {
+        Box(Modifier.matchParentSize().couiBackdrop(backdrop).background(brush))
         content(backdrop)
     }
 }
@@ -124,7 +126,7 @@ internal fun CouiForumPage(
     onTitleClick: (() -> Unit)? = null,
     extraTopBar: (@Composable (CouiBackdrop) -> Unit)? = null,
     progressiveHeader: Boolean = false,
-    mistBackground: Boolean = false,
+    mistBackground: Boolean = true,
     floatingAction: (@Composable BoxScope.() -> Unit)? = null,
     content: @Composable (PaddingValues) -> Unit,
 ) {
@@ -196,9 +198,7 @@ internal fun CouiForumPage(
             floatingActionButton = floatingAction,
             content = { padding ->
                 if (mistBackground) {
-                    BoxWithConstraints(Modifier.fillMaxSize()) {
-                        val viewportHeight = with(LocalDensity.current) { maxHeight.toPx() }
-                        Box(Modifier.matchParentSize().background(ngaMistBrush(CouiTheme.isDark, true, viewportHeight)))
+                    NgaMistBackground(Modifier.fillMaxSize()) {
                         content(padding)
                     }
                 } else {
