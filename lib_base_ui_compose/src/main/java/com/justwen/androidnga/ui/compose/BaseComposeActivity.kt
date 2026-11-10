@@ -9,6 +9,8 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import com.justwen.androidnga.ui.compose.theme.NgaComposeBackground
 import androidx.fragment.app.FragmentActivity
 import com.justwen.androidnga.ui.compose.miuix.MiuixChromeOwner
 import com.justwen.androidnga.ui.compose.miuix.MiuixChromeState
@@ -72,9 +74,13 @@ abstract class BaseComposeActivity : FragmentActivity(), MiuixChromeOwner {
                 ) {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colors.background
+                        color = if (NgaUiStyle.isCoui()) Color.Transparent else MaterialTheme.colors.background
                     ) {
-                        ContentView()
+                        if (NgaUiStyle.isCoui()) {
+                            NgaComposeBackground { ContentView() }
+                        } else {
+                            ContentView()
+                        }
                     }
                 }
             }

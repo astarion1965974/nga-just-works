@@ -35,6 +35,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.justwen.androidnga.ui.compose.miuix.NgaUiStyle
 
 @Composable
 fun FloatingActionButton(fabClick: (() -> Unit)? = null) {
@@ -49,7 +50,7 @@ fun FloatingActionButton(fabClick: (() -> Unit)? = null) {
 }
 
 @Composable
-fun OptionActionMenu(optionActions: List<OptionMenuData>? = null) {
+fun OptionActionMenu(optionActions: List<OptionMenuData>? = null, contentColor: Color = Color.White) {
     if (optionActions == null) {
         return
     }
@@ -65,7 +66,7 @@ fun OptionActionMenu(optionActions: List<OptionMenuData>? = null) {
                 Icon(
                     painter = painterResource(it.icon!!),
                     contentDescription = it.title,
-                    tint = Color.White
+                    tint = contentColor
                 )
             }
 
@@ -73,7 +74,7 @@ fun OptionActionMenu(optionActions: List<OptionMenuData>? = null) {
         if (hideItems.isNotEmpty()) {
             var expanded by remember { mutableStateOf(false) }
             IconButton(onClick = { expanded = !expanded }) {
-                Icon(imageVector = Icons.Default.MoreVert, contentDescription = "更多选项", tint = Color.White)
+                Icon(imageVector = Icons.Default.MoreVert, contentDescription = "更多选项", tint = contentColor)
                 DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                     hideItems.forEach(action = {
                         DropdownMenuItem(onClick = {
@@ -98,13 +99,18 @@ fun TopAppBarEx(
     val paddingValues = WindowInsets.statusBars.asPaddingValues()
     val top = paddingValues.calculateTopPadding()
     val pxValue = with(LocalDensity.current) { top.toPx() }
+    val coui = NgaUiStyle.isCoui()
+    val iconColor = if (coui) MaterialTheme.colors.onBackground else Color.White
+    val barColor = if (coui) {
+        if (NgaUiStyle.isNightMode()) Color(0xFF18232E) else Color(0xFFE7F0F8)
+    } else MaterialTheme.colors.primary
 
     TopAppBar(
-        backgroundColor = MaterialTheme.colors.primary,
+        backgroundColor = barColor,
         windowInsets = WindowInsets(0, pxValue.toInt(), 0, 0),
         title = {
             if (topAppBarData.customTopBar == null) {
-                Text(text = topAppBarData.title, color = Color.White)
+                Text(text = topAppBarData.title, color = iconColor)
             } else {
                 topAppBarData.customTopBar!!.invoke()
             }
@@ -118,13 +124,13 @@ fun TopAppBarEx(
                         TopAppBarNavigationIcon.Back -> Icons.AutoMirrored.Filled.ArrowBack
                         TopAppBarNavigationIcon.Menu -> Icons.Default.Menu
                     },
-                    tint = Color.White,
+                    tint = iconColor,
                     contentDescription = topAppBarData.navigationIcon.contentDescription,
                 )
             }
         },
         actions = {
-            OptionActionMenu(optionActions = topAppBarData.optionMenuData)
+            OptionActionMenu(optionActions = topAppBarData.optionMenuData, contentColor = iconColor)
         })
 }
 
@@ -160,7 +166,12 @@ fun ScaffoldApp(
     appContent: @Composable (() -> Unit)? = null,
 ) {
     rememberSystemUiController().run {
-        setStatusBarColor(MaterialTheme.colors.primary, false)
+        if (NgaUiStyle.isCoui()) {
+            val dark = NgaUiStyle.isNightMode()
+            setStatusBarColor(if (dark) Color(0xFF18232E) else Color(0xFFE7F0F8), !dark)
+        } else {
+            setStatusBarColor(MaterialTheme.colors.primary, false)
+        }
         // Android 15 makes the navigation bar transparent for edge-to-edge
         // apps. Paint it with the active surface color and use readable icons.
         setNavigationBarColor(MaterialTheme.colors.background, MaterialTheme.colors.isLight)

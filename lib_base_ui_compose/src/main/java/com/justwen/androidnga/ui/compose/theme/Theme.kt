@@ -9,6 +9,17 @@ import androidx.compose.ui.graphics.Color
 import com.alibaba.android.arouter.launcher.ARouter
 import com.justwen.androidnga.base.service.api.IThemeManagerService
 
+private val MistLightColors = lightColors(
+    primary = Color(0xFF3976B7), onPrimary = Color.White,
+    secondary = Color(0xFF3976B7), background = Color(0xFFF5F6F8),
+    onBackground = Color(0xFF1B1D20), surface = Color.White, onSurface = Color(0xFF1B1D20),
+)
+private val MistDarkColors = darkColors(
+    primary = Color(0xFF78AADB), onPrimary = Color(0xFF101317),
+    secondary = Color(0xFF78AADB), background = Color(0xFF101317),
+    onBackground = Color(0xFFE8EEF3), surface = Color(0xFF252B31), onSurface = Color(0xFFE8EEF3),
+)
+
 private val DarkColorPalette = darkColors(
     primary = PrimaryNight,
     primaryVariant = PrimaryGreen,
@@ -43,7 +54,9 @@ fun AppTheme(
     content: @Composable () -> Unit
 ) {
     val themeManager = ARouter.getInstance().build(IThemeManagerService.ROUTER_PATH).navigation() as IThemeManagerService
-    val colors = if (darkTheme || themeManager.isNightMode()) {
+    val colors = if (themeManager.isCouiStyle()) {
+        if (themeManager.isNightMode()) MistDarkColors else MistLightColors
+    } else if (darkTheme || themeManager.isNightMode()) {
         DarkColorPalette
     } else {
         val theme = themeManager.getThemeIndex()

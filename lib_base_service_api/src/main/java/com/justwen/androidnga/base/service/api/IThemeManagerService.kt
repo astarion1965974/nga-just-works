@@ -17,4 +17,7 @@ interface IThemeManagerService : IProvider {
     /** 当前外观是否为 Miuix（HyperOS）风格。 */
     fun isMiuixStyle(): Boolean
 
+    /** Whether the ColorOS COUI appearance is selected. */
+    fun isCouiStyle(): Boolean = false
+
 }

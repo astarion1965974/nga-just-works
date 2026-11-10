@@ -19,5 +19,8 @@ object NgaUiStyle {
     fun isMiuix(): Boolean = service()?.isMiuixStyle() == true
 
     @JvmStatic
+    fun isCoui(): Boolean = service()?.isCouiStyle() == true
+
+    @JvmStatic
     fun isNightMode(): Boolean = service()?.isNightMode() == true
 }

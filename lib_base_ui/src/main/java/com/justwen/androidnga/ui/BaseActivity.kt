@@ -1,6 +1,7 @@
 package com.justwen.androidnga.ui
 
 import android.os.Bundle
+import android.graphics.Color
 import android.util.TypedValue
 import android.view.MenuItem
 import android.view.View
@@ -67,13 +68,15 @@ abstract class BaseActivity : AppCompatActivity(), MiuixChromeOwner {
     private fun initStatusBar() {
         val decorView = window.decorView
         val controller = WindowCompat.getInsetsController(window, decorView)
-        controller.isAppearanceLightStatusBars = false
+        controller.isAppearanceLightStatusBars = NgaUiStyle.isCoui() && !NgaUiStyle.isNightMode()
     }
 
     private fun initNavigationBar() {
         val background = TypedValue()
         theme.resolveAttribute(android.R.attr.colorBackground, background, true)
-        val backgroundColor = if (background.resourceId != 0) {
+        val backgroundColor = if (NgaUiStyle.isCoui()) {
+            if (NgaUiStyle.isNightMode()) Color.rgb(16, 19, 23) else Color.rgb(245, 246, 248)
+        } else if (background.resourceId != 0) {
             ContextCompat.getColor(this, background.resourceId)
         } else {
             background.data
@@ -84,9 +87,12 @@ abstract class BaseActivity : AppCompatActivity(), MiuixChromeOwner {
         }
         window.decorView.setBackgroundColor(backgroundColor)
         val controller = WindowCompat.getInsetsController(window, window.decorView)
-        controller.isAppearanceLightNavigationBars =
+        controller.isAppearanceLightNavigationBars = if (NgaUiStyle.isCoui()) {
+            !NgaUiStyle.isNightMode()
+        } else {
             (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) !=
                 android.content.res.Configuration.UI_MODE_NIGHT_YES
+        }
     }
 
     private fun initEdgeToEdge() {
@@ -130,6 +136,9 @@ abstract class BaseActivity : AppCompatActivity(), MiuixChromeOwner {
     }
 
     private fun getPrimaryColor(): Int {
+        if (NgaUiStyle.isCoui()) {
+            return if (NgaUiStyle.isNightMode()) Color.rgb(24, 35, 46) else Color.rgb(231, 240, 248)
+        }
         val typedValue = TypedValue()
         theme.resolveAttribute(androidx.appcompat.R.attr.colorPrimary, typedValue, true)
         return typedValue.data

@@ -9,6 +9,9 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import com.justwen.androidnga.ui.compose.miuix.NgaUiStyle
+import com.justwen.androidnga.ui.compose.theme.NgaComposeBackground
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
@@ -50,9 +53,13 @@ open class BaseComposeFragment : Fragment(), MiuixFragment {
                     ) {
                         Surface(
                             modifier = Modifier.fillMaxSize(),
-                            color = MaterialTheme.colors.background
+                            color = if (NgaUiStyle.isCoui()) Color.Transparent else MaterialTheme.colors.background
                         ) {
-                            ContentView()
+                            if (NgaUiStyle.isCoui()) {
+                                NgaComposeBackground { ContentView() }
+                            } else {
+                                ContentView()
+                            }
                         }
                     }
                 }
